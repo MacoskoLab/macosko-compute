@@ -67,7 +67,7 @@ getparams(){
 
 	eval set -- "$options"
 
-  local memory=16g
+  local memory=160g
   local volumes=""
   local image=""
 

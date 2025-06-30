@@ -21,7 +21,7 @@
 
     podman build -f Dockerfile -t $IMAGE_NAME .
 
-    MEMORY=16g
+    MEMORY=160g
     PORT_NUM=$(gethostport|cut -d: -f2)
 
     podman run --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$USER -p $PORT_NUM:8787 -v /mnt/disks/$USER/workdir:/workdir:rw $IMAGE_NAME

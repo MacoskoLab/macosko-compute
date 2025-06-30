@@ -16,14 +16,14 @@
     login page, use username ```root``` and password to be _your_ username.
     Also, following additional arguments can be specified for the rstudio command:
 
-    `-m|--memory` : This argument has default value 16g. Adjuct based on maximum memory to reserve for container.
+    `-m|--memory` : This argument has default value `160g`. Adjuct based on maximum memory to reserve for container.
 
     `-i|--image` : This argument has default value `std` to included preintalled libraries like Seurat. If `basic` is passed, then no libraries are preinstalled. Packages installed within a container running `basic` image would be ported to another VM along with personal disk.
 
     example usage with parameters:
 
     ```
-    rstudio -m 32g -i basic # start rstudio server with 32GB memory and no preinstalled libraries
+    rstudio -m 200g -i basic # start rstudio server with 200GB memory and no preinstalled libraries
     ```
 - any data to be saved on the personal disk (to persist when personal disk is tranfered to another VM) should be placed within the path `/rstudio/workdir` in the rstudio container.
 
