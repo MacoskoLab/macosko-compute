@@ -212,7 +212,7 @@ startcontainer(){
     hostport=$(gethostport)
     IFS=":" read -r HOST_IP PORT_NUM <<< $hostport
 
-    podman run --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$USER -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
+    podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$USER -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
 
     podman ps | grep $CONTAINER_NAME
 
