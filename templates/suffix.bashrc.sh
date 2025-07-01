@@ -194,7 +194,7 @@ buildimage(){
     git clone https://github.com/mukundraj/macosko-compute /var/tmp/$(whoami)/macosko-compute
     echo "building user image $USER_IMAGE"
 
-    podman build --build-arg base_image_name=$BASE_IMAGE:latest --build-arg USER=$USER -t $USER_IMAGE -f /var/tmp/$(whoami)/macosko-compute/src/$IDE/Dockerfile
+    podman build --build-arg base_image_name=$BASE_IMAGE:latest --build-arg USER=$(id -un) -t $USER_IMAGE -f /var/tmp/$(whoami)/macosko-compute/src/$IDE/Dockerfile
 
     podman image exists $USER_IMAGE
     if [ $? -ne 0 ]; then
@@ -250,7 +250,7 @@ startcontainer(){
     hostport=$(gethostport)
     IFS=":" read -r HOST_IP PORT_NUM <<< $hostport
 
-    podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$USER -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
+    podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
 
     podman ps | grep $CONTAINER_NAME
 
@@ -454,8 +454,8 @@ rstudio(){
   esac
 
   
-  # build user image to be run ie ${BASE_IMAGE}_$USER
-  local USER_IMAGE="${BASE_IMAGE}-$USER"
+  # build user image to be run ie ${BASE_IMAGE}_$(id -un)
+  local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
   echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
   buildimage ${BASE_IMAGE} $USER_IMAGE "rstudio"
   # check for error
@@ -507,8 +507,8 @@ jupyter(){
   esac
 
   
-  # build user image to be run ie ${BASE_IMAGE}_$USER
-  local USER_IMAGE="${BASE_IMAGE}-$USER"
+  # build user image to be run ie ${BASE_IMAGE}_$(id -un)
+  local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
   echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
   buildimage ${BASE_IMAGE} $USER_IMAGE "jupyter"
   # check for error
@@ -591,7 +591,7 @@ handle-stop(){
     fi
     # check if num_containers is one
     if [ $num_containers -eq 1 ]; then
-      CONTAINER_NAME=$(podman ps | grep $USER | grep $IDE | awk '{print $NF}')
+      CONTAINER_NAME=$(podman ps | grep $(id -un) | grep $IDE | awk '{print $NF}')
       echo "detected container $CONTAINER_NAME"
       stop $IDE $CONTAINER_NAME
     else
