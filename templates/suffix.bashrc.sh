@@ -1,4 +1,5 @@
 
+# Global variables for common paths
 MOUNTDIR=/mnt/disks/$(id -un)
 RSTUDIO_PATH=$MOUNTDIR/rstudio
 RENV_CACHE_PATH=$MOUNTDIR/renvcache
@@ -8,6 +9,12 @@ MOUNTSFILE="$HOME/.config/misc/mounts"
 CON_STAT_FILE="$HOME/.config/misc/container"
 
 
+# Format a disk for use
+# Usage: formatdisk <disk_name>
+# Arguments:
+#   disk_name - Name of the disk to format
+# Returns:
+#   0 if successful, 1 if error
 formatdisk(){
 
   # ensure at least one argument
@@ -35,10 +42,12 @@ formatdisk(){
 
 }
 
-# read from mounts file and mount all
+# Remount all disks listed in the mounts file
+# Usage: remount
+# Returns:
+#   None
 remount(){
 
-  # MOUNTSFILE="$HOME/.config/misc/mounts"
   # if MOUNTSFILE exists, mount all disks in MOUNTSFILE
   if [ -f $MOUNTSFILE ]; then
     echo "mounting from $MOUNTSFILE"
@@ -55,7 +64,14 @@ remount(){
 }
 
 
-# retrive params
+# Parse command line parameters for container configuration
+# Usage: getparams [options]
+# Options:
+#   -i, --image NAME    Specify container image name
+#   -m, --memory SIZE   Specify memory limit (default: 160g)
+#   -v, --volumes VOLS  Specify volume mappings
+# Returns:
+#   String with parameters in format "memory&volumes&image"
 getparams(){
 
 	 # options handling start
@@ -101,7 +117,10 @@ getparams(){
 
 }
 
-# mounts personal dir if needed and creates basic subdirs
+# Mount personal directory if needed and create basic subdirectories
+# Usage: domount
+# Returns:
+#   0 if successful, 1 if error
 domount(){
 
   df -h | grep "$MOUNTDIR"
@@ -124,7 +143,14 @@ domount(){
   mkdir -p $RSTUDIO_PATH $RENV_CACHE_PATH $JUPYTER_PATH $WORKDIR_PATH
 }
 
-# builds base image and user image if any doesn't already exist
+# Build base image and user image if they don't already exist
+# Usage: buildimage <base_image> <user_image> <ide>
+# Arguments:
+#   base_image - Name of the base image
+#   user_image - Name of the user image to build
+#   ide - IDE type (rstudio or jupyter)
+# Returns:
+#   0 if successful, 1 if error
 buildimage(){
     
     local BASE_IMAGE=$1
@@ -179,6 +205,10 @@ buildimage(){
 
 }
 
+# Get available host IP and port for container access
+# Usage: gethostport
+# Returns:
+#   String with host IP and port in format "HOST_IP:PORT_NUM"
 gethostport(){
 
  local HOST_IP=$(wget -qO- http://ipecho.net/plain) ; 
@@ -188,6 +218,14 @@ gethostport(){
 
 }
 
+# Start container with specified image, memory, and volumes
+# Usage: startcontainer <image_name> <memory> <volumes>
+# Arguments:
+#   image_name - Name of the container image
+#   memory - Memory limit for the container
+#   volumes - Volume mappings for the container
+# Returns:
+#   0 if successful, 1 if error
 startcontainer(){
 
 
@@ -226,8 +264,10 @@ startcontainer(){
   fi
 }
 
-# remove stopped containers from CON_STAT_FILE
-# for cases where jupyter is stopped externally
+# Remove stopped containers from container status file
+# Usage: sync-con-stat-file
+# Returns:
+#   None
 sync-con-stat-file(){
   
   # get list of running container names
@@ -248,8 +288,12 @@ sync-con-stat-file(){
   echo "synced $CON_STAT_FILE"
 }
 
-# stop jupyter container
-# usage: stop-jupyter-container <container_name>
+# Stop a Jupyter container gracefully
+# Usage: stop-jupyter-container <container_name>
+# Arguments:
+#   container_name - Name of the Jupyter container to stop
+# Returns:
+#   None
 stop-jupyter-container(){
 
   local container_name=$1
@@ -266,7 +310,10 @@ stop-jupyter-container(){
   "
 }
 
-# stop all containers
+# Stop all running containers
+# Usage: all-stop
+# Returns:
+#   None
 all-stop(){
   
   local RUNNING_CONTAINERS=$(podman ps | grep -v CONTAINER | awk '{print $NF}')
@@ -284,6 +331,10 @@ all-stop(){
   done
 }
 
+# Write container state information to status file
+# Usage: writestate
+# Returns:
+#   None
 writestate(){
       # write CONTAINER_NAME HOST_IP PORT_NUM to CON_STAT_FILE. Overwrite file if exists.
     if [ -f $CON_STAT_FILE ]; then
@@ -299,7 +350,12 @@ writestate(){
 
 }
 
-# shows hostip and portnum from CON_STAT_FILE
+# Display container access information
+# Usage: showinfo <container_name>
+# Arguments:
+#   container_name - Name of the container to show info for
+# Returns:
+#   0 if successful, 1 if error
 showinfo(){
 
     CONTAINER_NAME=$1
@@ -320,7 +376,14 @@ showinfo(){
 
 }
 
-# starts container; mounts volumes; determine port; write state; showinfo
+# Start container with specified parameters
+# Usage: start [options]
+# Options:
+#   -i, --image NAME    Specify container image name
+#   -m, --memory SIZE   Specify memory limit (default: 160g)
+#   -v, --volumes VOLS  Specify volume mappings
+# Returns:
+#   0 if successful, 1 if error
 start(){
 
   params=$(getparams $@)
@@ -353,6 +416,14 @@ start(){
   showinfo $CONTAINER_NAME
 }
 
+# Start an RStudio container
+# Usage: rstudio [options]
+# Options:
+#   -i, --image NAME    Specify image type (basic or std, default: std)
+#   -m, --memory SIZE   Specify memory limit (default: 160g)
+#   -v, --volumes VOLS  Additional volume mappings
+# Returns:
+#   0 if successful, 1 if error
 rstudio(){
 
   params=$(getparams $@)
@@ -397,6 +468,14 @@ rstudio(){
   start "$@ -i $USER_IMAGE -v ${VOLS}"
 }
 
+# Start a Jupyter container
+# Usage: jupyter [options]
+# Options:
+#   -i, --image NAME    Specify image type (basic or std, default: std)
+#   -m, --memory SIZE   Specify memory limit (default: 160g)
+#   -v, --volumes VOLS  Additional volume mappings
+# Returns:
+#   0 if successful, 1 if error
 jupyter(){
 
   params=$(getparams $@)
@@ -445,7 +524,13 @@ jupyter(){
 
 
 
-# stops specified container
+# Stop a specified container
+# Usage: stop <ide_type> <container_name>
+# Arguments:
+#   ide_type - Type of IDE (rstudio or jupyter)
+#   container_name - Name of the container to stop
+# Returns:
+#   0 if successful, 1 if error
 stop(){
 
   IDE=$1
@@ -482,7 +567,13 @@ stop(){
 
 }
 
-# check if container name provide or can be determined from CON_STAT_FILE
+# Handle stopping containers with optional container name
+# Usage: handle-stop <ide_type> [container_name]
+# Arguments:
+#   ide_type - Type of IDE (rstudio or jupyter)
+#   container_name - Optional name of the container to stop
+# Returns:
+#   0 if successful, 1 if error
 handle-stop(){
 
   IDE=$1
@@ -517,6 +608,12 @@ handle-stop(){
 
 }
 
+# Stop an RStudio container
+# Usage: rstudio-stop [container_name]
+# Arguments:
+#   container_name - Optional name of the container to stop
+# Returns:
+#   0 if successful, 1 if error
 rstudio-stop(){
 
 	CONTAINER_NAME=$1
@@ -525,6 +622,12 @@ rstudio-stop(){
   
 }
 
+# Stop a Jupyter container
+# Usage: jupyter-stop [container_name]
+# Arguments:
+#   container_name - Optional name of the container to stop
+# Returns:
+#   0 if successful, 1 if error
 jupyter-stop(){
 
 	CONTAINER_NAME=$1
@@ -532,6 +635,12 @@ jupyter-stop(){
   handle-stop jupyter $CONTAINER_NAME
 }
 
+# Mount a disk to the user's directory
+# Usage: mountdisk <disk_name>
+# Arguments:
+#   disk_name - Name of the disk to mount
+# Returns:
+#   0 if successful, 1 if error
 mountdisk(){
 
   # ensure atleast one arg provided
@@ -600,10 +709,13 @@ mountdisk(){
   fi
 }
 
-# differences from mountdisk:
-# accepts a mount_pt
-# doesn't update mounts file
-# doesn't update permissions
+# Mount a disk at a specific mount point
+# Usage: mountdiskat <disk_name> <mount_point>
+# Arguments:
+#   disk_name - Name of the disk to mount
+#   mount_point - Directory where to mount the disk
+# Returns:
+#   0 if successful, 1 if error
 mountdiskat(){
 
   # ensure atleast two arg provided
@@ -658,6 +770,12 @@ mountdiskat(){
 
 }
 
+# Unmount a disk
+# Usage: unmountdisk <disk_name>
+# Arguments:
+#   disk_name - Name of the disk to unmount
+# Returns:
+#   0 if successful, 1 if error
 unmountdisk(){
 
   # ensure atleast one arg is provided
@@ -708,6 +826,12 @@ unmountdisk(){
   fi
 }
 
+# Refresh a disk after resizing
+# Usage: refreshdisk <disk_name>
+# Arguments:
+#   disk_name - Name of the disk to refresh
+# Returns:
+#   0 if successful, 1 if error
 refreshdisk(){
 
   # ensure at least one arg
@@ -738,7 +862,13 @@ refreshdisk(){
 
 }
 
-# utility fn to change uid and gid 
+# Change user ID and group ID
+# Usage: changeuid <username> <new_uid>
+# Arguments:
+#   username - Username to change UID for
+#   new_uid - New user ID to assign
+# Returns:
+#   0 if successful, 1 if error
 changeuid(){
 
 USERNAME=$1
