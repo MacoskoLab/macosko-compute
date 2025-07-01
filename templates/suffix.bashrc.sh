@@ -183,8 +183,22 @@ buildimage(){
           return 1
         fi
       else
-        echo "image $BASE_IMAGE.tar does not exist. please build the image first."
-        return 1
+
+        # check in /mnt/disks/common2/images
+        if [ -f /mnt/disks/common2/images/$BASE_IMAGE.tar ]; then
+          echo "image $BASE_IMAGE.tar exists in common2. loading image.."
+          podman load -i /mnt/disks/common2/images/$BASE_IMAGE.tar
+          # check if image loaded successfully
+          if [ $? -ne 0 ]; then
+            echo "error while loading image $BASE_IMAGE"
+            return 1
+          fi
+        else
+          # if not found in either location, return error
+
+          echo "image $BASE_IMAGE.tar does not exist. please build the image first."
+          return 1
+        fi
       fi
     fi
 
