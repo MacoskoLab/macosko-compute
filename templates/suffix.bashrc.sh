@@ -374,7 +374,7 @@ rstudio(){
       ;;
     std)
       BASE_IMAGE=rstudio-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw"
+      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
       ;;
     *)
       echo "invalid image name"
