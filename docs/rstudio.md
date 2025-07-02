@@ -6,6 +6,14 @@
     ```
     mountdisk <disk-name>
     ```
+- start tmux using following command if first use
+    ```
+    tmux
+    ```
+    for subsequent use, use the following command to attach to tmux session
+    ```
+    tmux attach
+    ```
 - start rstudio using following command. 
     ```
     rstudio
