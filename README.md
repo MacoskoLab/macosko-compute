@@ -1,5 +1,9 @@
 # using rstudio and jupyterlab on gcp VMs with a portable personal disk
 
+## 0. quick look up for routinely commands (after initial setup) 
+
+Here's a [list of routinely used commands](/docs/postsetup.md) to use after initial setup. For initial setup, proceed to next step.
+
 ## 1. create a personal disk
 - use gcp web ui to create a personal disk. This disk will hold all your data (being activly analyzed, not archival) and R libraries. Also, this disk can be resized later if needed.
 
