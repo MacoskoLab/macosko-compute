@@ -514,6 +514,10 @@ jupyter(){
       BASE_IMAGE=jupyter-std;
       VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
       ;;
+    ext1)
+      BASE_IMAGE=jupyter-ext1;
+      VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
+      ;;
     *)
       echo "invalid image name"
       return 1
