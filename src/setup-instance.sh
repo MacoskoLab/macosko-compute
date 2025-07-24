@@ -16,6 +16,7 @@ sudo apt-get -y install fdisk htop expect tmux dstat
 
 mkdir -p ~/.config/containers
 cp -f ./templates/storage.conf ~/.config/containers/storage.conf
+cp -f ./templates/registries.conf ~/.config/containers/registries.conf
 
 sudo cp -f ./templates/suffix.bashrc.sh /etc/suffix.bashrc
 
