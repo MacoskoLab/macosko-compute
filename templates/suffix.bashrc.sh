@@ -552,6 +552,47 @@ jupyter(){
 
 }
 
+custom(){
+
+  params=$(getparams $@)
+  IFS="&" read -r memory volumes_discard image <<< "$params"
+
+  # check if $image has been set
+  if [ -z "$image" ]; then
+    echo "no image specified. using std image as base image"
+    image=std
+  fi
+
+  # identify BASE_IMAGE_PATH
+  local BASE_IMAGE=""
+  local VOLS=""
+  case $image in
+    std)
+      BASE_IMAGE=custom-std;
+      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba" 
+      ;;
+    *)
+      echo "invalid image name"
+      return 1
+      ;;
+  esac
+
+  
+  # build user image to be run ie ${BASE_IMAGE}_$(id -un)
+  local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
+  echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
+  buildimage ${BASE_IMAGE} $USER_IMAGE "custom"
+  # check for error
+  if [ $? -ne 0 ]; then
+    echo "error while building image $USER_IMAGE"
+    return 1
+  fi
+
+  # pass all args to start and additionally pass image
+  start "$@ -i $USER_IMAGE -v ${VOLS}"
+
+}
+
 
 
 # Stop a specified container
@@ -663,6 +704,13 @@ jupyter-stop(){
 	CONTAINER_NAME=$1
 
   handle-stop jupyter $CONTAINER_NAME
+}
+
+custom-stop(){
+
+	CONTAINER_NAME=$1
+
+  handle-stop custom $CONTAINER_NAME
 }
 
 # Mount a disk to the user's directory
