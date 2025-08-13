@@ -18,8 +18,8 @@ RUN chmod +x /usr/local/bin/init_jupyterlab.sh
 RUN echo '#!/bin/bash --login' > /usr/local/bin/jstart && \
     echo 'source /usr/local/bin/init_jupyterlab.sh' >> /usr/local/bin/jstart && \
     echo 'init_jupyterlab' >> /usr/local/bin/jstart && \
-    echo 'exec /bin/bash --login' >> /usr/local/bin/jstart && \
     chmod +x /usr/local/bin/jstart
+    # echo 'exec /bin/bash --login' >> /usr/local/bin/jstart && \
 
 ENTRYPOINT ["/bin/bash", "-lc"]
 CMD ["jstart"]

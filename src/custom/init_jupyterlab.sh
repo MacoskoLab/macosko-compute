@@ -3,7 +3,7 @@ init_jupyterlab() {
     if micromamba env list | grep -q "jupyterlab"; then
         echo "JupyterLab environment found. Activating and starting JupyterLab..."
         micromamba activate jupyterlab
-        jupyter lab --allow-root --ip '0.0.0.0' --port '8787' --NotebookApp.token='' --NotebookApp.notebook_dir='/workdir' --no-browser  &
+        jupyter lab --allow-root --ip '0.0.0.0' --port '8787' --NotebookApp.token='' --NotebookApp.notebook_dir='/workdir' --no-browser
     else
         echo "JupyterLab environment not found. Creating and starting JupyterLab..."
         # Create the environment
@@ -33,6 +33,6 @@ init_jupyterlab() {
 
 
         # Start JupyterLab
-        jupyter lab --allow-root --ip '0.0.0.0' --port '8787' --NotebookApp.token='' --NotebookApp.notebook_dir='/workdir' --no-browser &
+        jupyter lab --allow-root --ip '0.0.0.0' --port '8787' --NotebookApp.token='' --NotebookApp.notebook_dir='/workdir' --no-browser
     fi
 }
