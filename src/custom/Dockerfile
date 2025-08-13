@@ -1,6 +1,12 @@
 ARG base_image_name as base
 FROM ${base_image_name}
 
+ARG USER=REQUIRED
+RUN [ "$USER" != "REQUIRED" ]
+
+# set env variable USER for container
+ENV USER=${USER}
+
 # Copy init environment script
 COPY init_jupyterlab.sh /usr/local/bin/init_jupyterlab.sh
 RUN chmod +x /usr/local/bin/init_jupyterlab.sh
