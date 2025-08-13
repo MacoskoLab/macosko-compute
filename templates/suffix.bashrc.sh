@@ -70,12 +70,13 @@ remount(){
 #   -i, --image NAME    Specify container image name
 #   -m, --memory SIZE   Specify memory limit (default: 160g)
 #   -v, --volumes VOLS  Specify volume mappings
+#   -e, --envmanage     Enable environment management (no value needed)
 # Returns:
-#   String with parameters in format "memory&volumes&image"
+#   String with parameters in format "memory&volumes&image&envmanage"
 getparams(){
 
 	 # options handling start
-	 local options=$(getopt -o "i:m:v:" --long "image:,memory:,volumes:" -- "$@")
+	 local options=$(getopt -o "i:m:v:e" --long "image:,memory:,volumes:,envmanage" -- "$@")
 	if [ $? -ne 0 ]; then
 		echo "Error parsing options." >&2
 		return 1
@@ -86,6 +87,7 @@ getparams(){
   local memory=160g
   local volumes=""
   local image=""
+  local envmanage=false
 
 	while true; do
 		case "$1" in
@@ -101,6 +103,10 @@ getparams(){
 				volumes="$2"
 				shift 2
 				;;
+			-e|--envmanage)
+				envmanage=true
+				shift
+				;;
 			--)
 				shift
 				break
@@ -113,7 +119,7 @@ getparams(){
 	done
 
   # important
-	echo "$memory&$volumes&$image" 
+	echo "$memory&$volumes&$image&$envmanage" 
 
 }
 
@@ -247,6 +253,7 @@ startcontainer(){
   local IMAGE_NAME=$1
   local MEMORY=$2
   local VOLS=$3
+  local ENVMANAGE=$4
 
   # replace + by space in VOLS
   VOLS=${VOLS//+/ }
@@ -265,13 +272,26 @@ startcontainer(){
     hostport=$(gethostport)
     IFS=":" read -r HOST_IP PORT_NUM <<< $hostport
 
-    podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
+    # if ENVMANAGE flag ('-e') is false then run following 
+    if [ "$ENVMANAGE" = "false" ]; then
+      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
+    else
+      # if ENVMANAGE flag ('-e') is true then run following
+      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
+    fi
 
     podman ps | grep $CONTAINER_NAME
 
     if [ $? -eq 1 ]; then
-      echo "error. container not created"
-      return 1
+      # if ENVMANAGE flag is not set then echo "error"
+      if [ "$ENVMANAGE" = "false" ]; then
+        echo "error. container not created"
+        return 1
+      else
+        # if ENVMANAGE flag is set then just echo "exited env manager container"
+        echo "exited env manager container"
+        return 0
+      fi
     else
       echo "container $CONTAINER_NAME created"
       writestate
@@ -403,9 +423,9 @@ start(){
 
   params=$(getparams $@)
 
-  IFS="&" read -r memory volumes image <<< "$params"
+  IFS="&" read -r memory volumes image envmanage <<< "$params"
 
-  echo startparams: $memory $volumes $image
+  echo startparams: $memory $volumes $image $envmanage
 
   sync-con-stat-file
 
@@ -419,7 +439,7 @@ start(){
   domount
 
   # start container and write state if container created
-  startcontainer $image $memory $volumes
+  startcontainer $image $memory $volumes $envmanage
   # error check
   if [ $? -ne 0 ]; then
     echo "error while starting container $image"
@@ -427,8 +447,10 @@ start(){
   fi
   
 	local CONTAINER_NAME=$image
-  # read state and show connection info
-  showinfo $CONTAINER_NAME
+  # read state and show connection info only if ENVMANAGE is false
+  if [ "$envmanage" = "false" ]; then
+    showinfo $CONTAINER_NAME
+  fi
 }
 
 # Start an RStudio container
@@ -442,7 +464,13 @@ start(){
 rstudio(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image <<< "$params"
+  IFS="&" read -r memory volumes_discard image envmanage <<< "$params"
+
+  # check if -e flag was used
+  if [ "$envmanage" = "true" ]; then
+    echo "invalid parameter: -e flag not supported for rstudio"
+    return 1
+  fi
 
   # check if $image has been set
   if [ -z "$image" ]; then
@@ -502,7 +530,13 @@ rstudio(){
 jupyter(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image <<< "$params"
+  IFS="&" read -r memory volumes_discard image envmanage <<< "$params"
+
+  # check if -e flag was used
+  if [ "$envmanage" = "true" ]; then
+    echo "invalid parameter: -e flag not supported for jupyter"
+    return 1
+  fi
 
   # check if $image has been set
   if [ -z "$image" ]; then
@@ -556,7 +590,7 @@ jupyter(){
 custom(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image <<< "$params"
+  IFS="&" read -r memory volumes_discard image envmanage <<< "$params"
 
   # check if $image has been set
   if [ -z "$image" ]; then
@@ -590,7 +624,11 @@ custom(){
   fi
 
   # pass all args to start and additionally pass image
-  start "$@ -i $USER_IMAGE -v ${VOLS}"
+  if [ "$envmanage" = "true" ]; then
+    start "$@ -i $USER_IMAGE -v ${VOLS} -e"
+  else
+    start "$@ -i $USER_IMAGE -v ${VOLS}"
+  fi
 
 }
 

@@ -12,6 +12,9 @@ init_jupyterlab() {
 
        micromamba create -n jupyterlab -y python=3.11.2 jupyterlab pandas -c conda-forge
 
+       # Activate the new environment
+       micromamba activate jupyterlab
+
        # set password 
        expect -c '
        spawn bash -lc "micromamba run -n jupyterlab jupyter lab password"
@@ -28,8 +31,6 @@ init_jupyterlab() {
         # Install the R kernel for JupyterLab
         micromamba run -n jupyterlab R -e 'IRkernel::installspec(user = FALSE)'
 
-        # Activate the new environment
-        micromamba activate jupyterlab
 
 
         # Start JupyterLab
