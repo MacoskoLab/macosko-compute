@@ -141,6 +141,7 @@ domount(){
   fi
 
   mkdir -p $RSTUDIO_PATH $RENV_CACHE_PATH $JUPYTER_PATH $WORKDIR_PATH
+  mkdir -p $JUPYTER_PATH/micromamba $JUPYTER_PATH/r-packages
 }
 
 # Build base image and user image if they don't already exist
