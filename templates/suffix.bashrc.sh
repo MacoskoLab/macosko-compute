@@ -353,13 +353,15 @@ all-stop(){
   
   local RUNNING_CONTAINERS=$(podman ps | grep -v CONTAINER | awk '{print $NF}')
 
-  # stop each container based on whether rstudio or jupyter
+  # stop each container based on whether rstudio, jupyter, or custom
   for container in $RUNNING_CONTAINERS; do
     echo "stopping $container"
     if [[ $container == *"rstudio"* ]]; then
       stop rstudio $container
     elif [[ $container == *"jupyter"* ]]; then
       stop jupyter $container
+    elif [[ $container == *"custom"* ]]; then
+      stop custom $container
     else
       echo "unknown container type. skipping $container"
     fi
