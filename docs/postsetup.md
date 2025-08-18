@@ -55,7 +55,7 @@ These are base set of commands needed. For more functionality offered by tmux, p
 
 ## path to workdir on highmem1 machine
 
-place any files to be viewed within the rstudio workdir here on the highmem1 filesystem
+place any files/data to be accessed within the rstudio or jupyter working directory here on the highmem1 filesystem
 
 ```
 /mnt/disks/$USER/workdir
