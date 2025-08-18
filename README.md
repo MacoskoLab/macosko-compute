@@ -44,11 +44,15 @@ See [rstudio docs](/docs/rstudio.md)
 
 See [jupyter docs](/docs/jupyter.md)
 
-## 4.  to start a custom docker image
+## 4.  to start a custom jupyter lab image (manage own env/packages)
 
-See [custom image docs](/docs/custom.md)
+See [custom docs](/docs/custom.md)
 
-## 5. stopping containers
+## 5. to use your own container image
+
+See [own image docs](/docs/own.md)
+
+## 6. stopping containers
 
 After work is completed, the following commands can be used to stop the container and release reserved system resourses.
 
@@ -56,5 +60,7 @@ After work is completed, the following commands can be used to stop the containe
 
 `jupyter-stop` : stop running jupyter lab session
 
-`all-stop` : stop all jupyter or rstudio sessions (that have text '*jupyter*' or '*rstudio*' as part of the underlying container container name)
+`custom-stop`  : stop running custom jupyter lab session
+
+`all-stop` : stop all jupyter or rstudio sessions (that have text '*jupyter*' or '*rstudio*' or '*custom*' as part of the underlying container container name)
 
