@@ -283,7 +283,12 @@ startcontainer(){
 
     # if SETUPMODE flag ('-s') is false then run following 
     if [ "$SETUPMODE" = "false" ]; then
-      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
+      # check if image name contains "custom"
+      if [[ $IMAGE_NAME == *"custom"* ]]; then
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME "jstart $MMENV"
+      else
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
+      fi
     else
       # if SETUPMODE flag ('-s') is true then run following
       podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
@@ -648,8 +653,6 @@ custom(){
     echo "error while building image $USER_IMAGE"
     return 1
   fi
-
-  echo 'mmenv'+$mmenv
 
   # pass all args to start and additionally pass image
   if [ "$setupmode" = "true" ]; then
