@@ -49,9 +49,10 @@ These are base set of commands needed. For more functionality offered by tmux, p
     ```
     custom-stop # to stop custom jupyter lab
     ```
-- installing R and Python packages in custom jupyter lab
+- managing enviromemnts and installing R and Python packages in custom jupyter lab's environments
 
-    - see [here](/docs/custom.md) for steps to install R and python packages in custom jupyterlab
+    - use `custom -e <envname>` to start jupyter lab with a specified micromamba environment name for package isolation between projects
+    - see [here](/docs/custom.md) for steps to install R and python packages within custom environments
 
 ## path to workdir on highmem1 machine
 

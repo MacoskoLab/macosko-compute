@@ -27,13 +27,19 @@ Custom jupyter lab image requires the user to manage their own packages. Package
     login page, use username ```root``` and password to be _your_ username.
     Also, following additional arguments can be specified for the jupyter command:
 
-    `-m|--memory` : This argument has default value 160g. Adjuct based on maximum memory to reserve for container.
+    `-m|--memory` : This argument has default value 160g. Adjust based on maximum memory to reserve for container.
 
+    `-e|--mmenv` : This argument specifies the micromamba environment name to use or create. Default value is `jupyterlab`. When a custom environment name is provided, the container will create or activate that specific micromamba environment for package isolation.
+
+    `-s|--setupmode` : This flag starts the container in setup mode, providing direct bash shell access instead of launching Jupyter Lab. Useful for installing packages, debugging, or performing administrative tasks. Cannot be used simultaneously with `-e` flag.
 
     example usage with parameters:
 
     ```
-    custom -m 200g -i basic # start jupyter server with 200GB memory 
+    custom -m 200g               # start jupyter server with 200GB memory 
+    custom -e myenv2             # start with custom micromamba environment 'myenv2'
+    custom -s                    # start in setup mode (bash shell access)
+    custom -e myenv2 -m 180g     # start with 'myenv2' environment and 180GB memory
     ```
 - any data to be saved on the personal disk (to persist when personal disk is tranfered to another VM) should be placed within the path `/jupyter/workdir` in the jupyter container.
 
