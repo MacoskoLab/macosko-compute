@@ -77,7 +77,7 @@ remount(){
 getparams(){
 
 	 # options handling start
-	 local options=$(getopt -o "i:m:v:s:e:" --long "image:,memory:,volumes:,setupmode:,mmenv:" -- "$@")
+	 local options=$(getopt -o "i:m:v:se:" --long "image:,memory:,volumes:,setupmode,mmenv:" -- "$@")
 	if [ $? -ne 0 ]; then
 		echo "Error parsing options." >&2
 		return 1
@@ -110,6 +110,10 @@ getparams(){
 				shift
 				;;
 			-e|--mmenv)
+				if [ -z "$2" ] || [[ "$2" == -* ]]; then
+					echo "Error: -e/--mmenv flag requires a value" >&2
+					return 1
+				fi
 				mmenv="$2"
 				shift 2
 				;;
@@ -438,6 +442,9 @@ showinfo(){
 start(){
 
   params=$(getparams $@)
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
 
   IFS="&" read -r memory volumes image setupmode mmenv <<< "$params"
 
@@ -480,6 +487,9 @@ start(){
 rstudio(){
 
   params=$(getparams $@)
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
   IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
   # check if -s flag was used
@@ -552,6 +562,9 @@ rstudio(){
 jupyter(){
 
   params=$(getparams $@)
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
   IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
   # check if -s flag was used
@@ -618,11 +631,24 @@ jupyter(){
 custom(){
 
   params=$(getparams $@)
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
   IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
     echo "invalid parameter: -i flag not supported for custom"
+    return 1
+  fi
+
+  # echo setupmode and mmenv
+  echo "setupmode: $setupmode mmenv: $mmenv"
+
+  
+  # check if both -s and -e flags are used simultaneously
+  if [ "$setupmode" = "true" ] && [ "$mmenv" != "jupyterlab" ]; then
+    echo "invalid parameter: -s and -e flags cannot be used simultaneously"
     return 1
   fi
 
