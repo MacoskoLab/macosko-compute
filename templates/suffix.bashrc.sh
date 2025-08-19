@@ -661,7 +661,7 @@ custom(){
   case $image in
     std)
       BASE_IMAGE=custom-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba" 
+      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
       ;;
     *)
       echo "invalid image name"
@@ -684,7 +684,7 @@ custom(){
   if [ "$setupmode" = "true" ]; then
     start "$@ -i $USER_IMAGE -v ${VOLS} -s"
   else
-    start "$@ -i $USER_IMAGE -v ${VOLS}"
+    start "$@ -i $USER_IMAGE -v ${VOLS} -e ${mmenv}"
   fi
 
 }
