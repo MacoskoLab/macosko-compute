@@ -71,12 +71,13 @@ remount(){
 #   -m, --memory SIZE   Specify memory limit (default: 160g)
 #   -v, --volumes VOLS  Specify volume mappings
 #   -s, --setupmode     Enable setup mode (no value needed)
+#   -e, --mmenv ENV     Specify micromamba environment (default: jupyterlab)
 # Returns:
-#   String with parameters in format "memory&volumes&image&setupmode"
+#   String with parameters in format "memory&volumes&image&setupmode&mmenv"
 getparams(){
 
 	 # options handling start
-	 local options=$(getopt -o "i:m:v:s" --long "image:,memory:,volumes:,setupmode" -- "$@")
+	 local options=$(getopt -o "i:m:v:s:e:" --long "image:,memory:,volumes:,setupmode:,mmenv:" -- "$@")
 	if [ $? -ne 0 ]; then
 		echo "Error parsing options." >&2
 		return 1
@@ -88,6 +89,7 @@ getparams(){
   local volumes=""
   local image=""
   local setupmode=false
+  local mmenv=jupyterlab
 
 	while true; do
 		case "$1" in
@@ -107,6 +109,10 @@ getparams(){
 				setupmode=true
 				shift
 				;;
+			-e|--mmenv)
+				mmenv="$2"
+				shift 2
+				;;
 			--)
 				shift
 				break
@@ -119,7 +125,7 @@ getparams(){
 	done
 
   # important
-	echo "$memory&$volumes&$image&$setupmode" 
+	echo "$memory&$volumes&$image&$setupmode&$mmenv" 
 
 }
 
@@ -240,11 +246,13 @@ gethostport(){
 }
 
 # Start container with specified image, memory, and volumes
-# Usage: startcontainer <image_name> <memory> <volumes>
+# Usage: startcontainer <image_name> <memory> <volumes> <setupmode> <mmenv>
 # Arguments:
 #   image_name - Name of the container image
 #   memory - Memory limit for the container
 #   volumes - Volume mappings for the container
+#   setupmode - Setup mode flag
+#   mmenv - Micromamba environment name
 # Returns:
 #   0 if successful, 1 if error
 startcontainer(){
@@ -254,6 +262,7 @@ startcontainer(){
   local MEMORY=$2
   local VOLS=$3
   local SETUPMODE=$4
+  local MMENV=$5
 
   # replace + by space in VOLS
   VOLS=${VOLS//+/ }
@@ -425,9 +434,9 @@ start(){
 
   params=$(getparams $@)
 
-  IFS="&" read -r memory volumes image setupmode <<< "$params"
+  IFS="&" read -r memory volumes image setupmode mmenv <<< "$params"
 
-  echo startparams: $memory $volumes $image $setupmode
+  echo startparams: $memory $volumes $image $setupmode $mmenv
 
   sync-con-stat-file
 
@@ -441,7 +450,7 @@ start(){
   domount
 
   # start container and write state if container created
-  startcontainer $image $memory $volumes $setupmode
+  startcontainer $image $memory $volumes $setupmode $mmenv
   # error check
   if [ $? -ne 0 ]; then
     echo "error while starting container $image"
@@ -466,11 +475,17 @@ start(){
 rstudio(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image setupmode <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
     echo "invalid parameter: -s flag not supported for rstudio"
+    return 1
+  fi
+
+  # check if -e flag was used
+  if [ "$mmenv" != "jupyterlab" ]; then
+    echo "invalid parameter: -e flag not supported for rstudio"
     return 1
   fi
 
@@ -532,11 +547,17 @@ rstudio(){
 jupyter(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image setupmode <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
     echo "invalid parameter: -s flag not supported for jupyter"
+    return 1
+  fi
+
+  # check if -e flag was used
+  if [ "$mmenv" != "jupyterlab" ]; then
+    echo "invalid parameter: -e flag not supported for jupyter"
     return 1
   fi
 
@@ -592,13 +613,16 @@ jupyter(){
 custom(){
 
   params=$(getparams $@)
-  IFS="&" read -r memory volumes_discard image setupmode <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
 
-  # check if $image has been set
-  if [ -z "$image" ]; then
-    echo "no image specified. using std image as base image"
-    image=std
+  # check if -i flag was used
+  if [ -n "$image" ]; then
+    echo "invalid parameter: -i flag not supported for custom"
+    return 1
   fi
+
+  # set default image to std
+  image=std
 
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
@@ -624,6 +648,8 @@ custom(){
     echo "error while building image $USER_IMAGE"
     return 1
   fi
+
+  echo 'mmenv'+$mmenv
 
   # pass all args to start and additionally pass image
   if [ "$setupmode" = "true" ]; then
