@@ -689,6 +689,67 @@ custom(){
 
 }
 
+custom2(){
+
+  params=$(getparams $@)
+  if [ $? -ne 0 ]; then
+    return 1
+  fi
+  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
+
+  # check if -i flag was used
+  if [ -n "$image" ]; then
+    echo "invalid parameter: -i flag not supported for custom"
+    return 1
+  fi
+
+  # echo setupmode and mmenv
+  echo "setupmode: $setupmode mmenv: $mmenv"
+
+  
+  # check if both -s and -e flags are used simultaneously
+  if [ "$setupmode" = "true" ] && [ "$mmenv" != "jupyterlab" ]; then
+    echo "invalid parameter: -s and -e flags cannot be used simultaneously"
+    return 1
+  fi
+
+  # set default image to std
+  image=std
+
+  # identify BASE_IMAGE_PATH
+  local BASE_IMAGE=""
+  local VOLS=""
+  case $image in
+    std)
+      BASE_IMAGE=custom2-std;
+      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      ;;
+    *)
+      echo "invalid image name"
+      return 1
+      ;;
+  esac
+
+  
+  # build user image to be run ie ${BASE_IMAGE}_$(id -un)
+  local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
+  echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
+  buildimage ${BASE_IMAGE} $USER_IMAGE "custom2"
+  # check for error
+  if [ $? -ne 0 ]; then
+    echo "error while building image $USER_IMAGE"
+    return 1
+  fi
+
+  # pass all args to start and additionally pass image
+  if [ "$setupmode" = "true" ]; then
+    start "$@ -i $USER_IMAGE -v ${VOLS} -s"
+  else
+    start "$@ -i $USER_IMAGE -v ${VOLS} -e ${mmenv}"
+  fi
+
+}
+
 
 
 # Stop a specified container
