@@ -9,6 +9,9 @@ ARG ENVNAME=jupyterlab
 # set env variable USER for container
 ENV USER=${USER}
 ENV ENVNAME=${ENVNAME}
+ENV JUPYTER_CONFIG_DIR=/jupyter/.jupyter
+
+RUN echo 'export JUPYTER_CONFIG_DIR="/jupyter/.jupyter"' >> /root/.bashrc
 
 # Copy init environment script
 COPY init_mmenv.sh /usr/local/bin/init_mmenv.sh
@@ -24,7 +27,7 @@ RUN echo '#!/bin/bash --login' > /usr/local/bin/jstart && \
     chmod +x /usr/local/bin/jstart
     # echo 'exec /bin/bash --login' >> /usr/local/bin/jstart && \
 
-RUN echo "wd <- '/workdir'\nif (dir.exists(wd)) {\n  setwd(wd)\n  pd <- file.path(wd, 'R-packages', Sys.getenv('ENVNAME'))\n  if (!dir.exists(pd)) {dir.create(pd, recursive = TRUE)}\n  .libPaths(c(pd, .libPaths()))\n  if (.libPaths()[1] != pd) {print('WARNING: Could not set user package directory')}\n} else {\n  print('WARNING: /workdir directory not found')\n}\nsuppressWarnings(rm(wd,pd))" > /root/.Rprofile
+RUN echo "wd <- '/workdir'\nenvname <- Sys.getenv('CONDA_DEFAULT_ENV', unset = Sys.getenv('ENVNAME'))\npd <- file.path(wd, 'R-packages', envname)\nif (!dir.exists(pd)) {dir.create(pd, recursive = TRUE)}\n.libPaths(c(pd, .libPaths()))\nif (.libPaths()[1] != pd) {print('WARNING: Could not set user package directory')}\nif (dir.exists(wd)) {setwd(wd)}\nsuppressWarnings(rm(wd,pd,envname))" > /root/.Rprofile
 
 ENTRYPOINT ["/bin/bash", "-lc"]
 CMD ["jstart", "jupyterlab"]
