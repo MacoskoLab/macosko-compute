@@ -158,6 +158,16 @@ domount(){
 
   mkdir -p $RSTUDIO_PATH $RENV_CACHE_PATH $JUPYTER_PATH $WORKDIR_PATH
   mkdir -p $JUPYTER_PATH/micromamba $JUPYTER_PATH/.jupyter
+
+  # if $WORKDIR_PATH/.renvignore doesnt exist copy it there from ../templates/renvignore
+  if [ ! -f "$WORKDIR_PATH/.renvignore" ]; then
+    if [ -f "/var/tmp/$(whoami)/macosko-compute/templates/renvignore" ]; then
+      cp /var/tmp/$(whoami)/macosko-compute/templates/renvignore $WORKDIR_PATH/.renvignore
+      echo "copied .renvignore to $WORKDIR_PATH"
+    else
+      echo "warning: template .renvignore not found"
+    fi
+  fi
 }
 
 # Build base image and user image if they don't already exist

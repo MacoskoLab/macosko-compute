@@ -1,0 +1,64 @@
+# renv ignore file - files/directories to ignore when taking snapshots
+# Documentation: https://rstudio.github.io/renv/articles/renv.html#ignoring-files
+
+# Data directories
+data/
+raw_data/
+output/
+results/
+figures/
+plots/
+
+# Cache directories
+cache/
+.cache/
+tmp/
+temp/
+
+# Log files
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.Rproj
+.Rproj.user/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+vignettes/
+
+# Configuration files that shouldn't affect dependencies
+config/
+.env
+.env.*
+
+# Test files
+tests/
+test/
+
+# Scripts that don't define dependencies
+bin/
+
+# Temporary R files
+.RData
+.Rhistory
+.Rproj.user
+
+renv.lock
