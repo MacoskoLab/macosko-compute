@@ -14,7 +14,7 @@ common_setup(){
        micromamba run -n "$envname" jupyter lab --generate-config && echo -e 'c.ServerApp.terminals_enabled = True\nc.FileContentsManager.delete_to_trash = False\nc.ContentsManager.allow_hidden = True' >> /jupyter/.jupyter/jupyter_lab_config.py
 
         # Install the R kernel for JupyterLab
-        # micromamba run -n "$envname" R -e 'IRkernel::installspec(user = FALSE)'
+        micromamba run -n "$envname" R -e 'renv::load(); IRkernel::installspec(user = FALSE)'
 
 
 }
@@ -26,7 +26,8 @@ init_mmenv() {
         echo "$envname environment found. Activating and starting JupyterLab..."
         micromamba activate "$envname"
 
-        # common_setup "$envname"
+        common_setup "$envname"
+
 
         jupyter lab --allow-root --ip '0.0.0.0' --port '8787' --NotebookApp.token='' --NotebookApp.notebook_dir='/workdir' --no-browser
     else
@@ -34,13 +35,14 @@ init_mmenv() {
         # Create the environment
 
        # micromamba create -n "$envname" -y python=3.11.2 jupyterlab pandas -c conda-forge
-       micromamba create -n "$envname" r-matrix python=3.10 r-base=4.3 jupyterlab ibxml2 xz zlib r-pbdzmq r-renv r-yaml gcc_linux-64 gxx_linux-64 -c conda-forge -y
+       micromamba create -n "$envname" r-matrix python=3.10 r-base=4.3 jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml gcc_linux-64 gxx_linux-64 -c conda-forge -y
 
 
        # Activate the new environment
        micromamba activate "$envname"
 
-      micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
+      # micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
+      micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE);'
 
 
 
