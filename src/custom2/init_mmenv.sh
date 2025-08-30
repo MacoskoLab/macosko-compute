@@ -14,7 +14,7 @@ common_setup(){
        micromamba run -n "$envname" jupyter lab --generate-config && echo -e 'c.ServerApp.terminals_enabled = True\nc.FileContentsManager.delete_to_trash = False\nc.ContentsManager.allow_hidden = True' >> /jupyter/.jupyter/jupyter_lab_config.py
 
         # setup IRkernel if renv/activate.R or renv.lock exists, install and setup if not
-        micromamba run -n "$envname" R -e 'if (file.exists("renv/activate.R")) { renv::load(); IRkernel::installspec(user = FALSE) } else if (file.exists("renv.lock")) { renv::init(bare=TRUE); IRkernel::installspec(user = FALSE) } else { renv::init(); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE) }'
+        micromamba run -n "$envname" R -e 'if (file.exists("renv/activate.R")) { renv::load(prompt = FALSE); IRkernel::installspec(user = FALSE) } else if (file.exists("renv.lock")) { renv::init(bare=TRUE, prompt = FALSE); IRkernel::installspec(user = FALSE) } else { renv::init(prompt = FALSE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE) }'
         # first condition - regular restart (only load, don't init renv)
         # second condition - first time start via renv.lock (init_mmenv wont init since micromamba env already exists); (renv.lock must include IRkernel)
         # third condition - first time restart after clearing workdir (init_mmenv wont init renv since micromamba env already exists)
@@ -45,7 +45,7 @@ init_mmenv() {
        micromamba activate "$envname"
 
       # micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
-      micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE);'
+      micromamba run -n "$envname" R -e 'renv::init(bare=TRUE, prompt = FALSE); renv::install("IRkernel", prompt = FALSE);'
 
 
 
