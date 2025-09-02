@@ -552,22 +552,23 @@ rstudio(){
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
   local VOLS=""
+  local CONTAINER_WORKDIR="/${workdir:-workdir}"
   case $image in
     basic)
       BASE_IMAGE=rstudio-basic;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw" 
       ;;
     std)
       BASE_IMAGE=rstudio-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
       ;;
     ext1)
       BASE_IMAGE=rstudio-ext1;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
       ;;
     cus1)
       BASE_IMAGE=rstudio-cus1;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
       ;;
     *)
       echo "invalid image name"
@@ -629,23 +630,24 @@ jupyter(){
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
   local VOLS=""
+  local CONTAINER_WORKDIR="/${workdir:-workdir}"
   case $image in
     basic)
       BASE_IMAGE=jupyter-basic;
       # VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+micromamba:/root/micromamba:rw"+-v+"opt:/opt:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+micromamba:/root/micromamba:rw"+-v+"opt:/opt:rw"
       ;;
     std)
       BASE_IMAGE=jupyter-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
       ;;
     ext1)
       BASE_IMAGE=jupyter-ext1;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
       ;;
     ext2)
       BASE_IMAGE=jupyter-ext2;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
       ;;
     *)
       echo "invalid image name"
@@ -703,7 +705,7 @@ custom(){
     std)
       BASE_IMAGE=custom-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$WORKDIR_PATH:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
       ;;
     *)
       echo "invalid image name"
