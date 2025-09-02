@@ -16,7 +16,7 @@ common_setup(){
 
         # setup IRkernel if renv/activate.R or renv.lock exists, install and setup if not
         echo "workdir: $workdir"
-        micromamba run -n "$envname" R -e "setwd('$workdir'); if (file.exists('renv/activate.R')) { renv::load(); IRkernel::installspec(user = FALSE) } else if (file.exists('renv.lock')) { renv::init(bare=TRUE); renv::restore(); renv::install(c('pbdZMQ', 'IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) } else { renv::init(); renv::install(c('pbdZMQ','IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) }"
+        micromamba run -n "$envname" R -e "setwd('$workdir'); if (file.exists('renv/activate.R')) { renv::load(); IRkernel::installspec(user = FALSE) } else if (file.exists('renv.lock')) { renv::init(bare=TRUE); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::restore(); renv::install(c('pbdZMQ', 'IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) } else { renv::init(); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('pbdZMQ','IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) }"
         # first condition - regular restart (only load, don't init renv)
         # second condition - first time start via renv.lock (init_mmenv wont init since micromamba env already exists); (renv.lock must include IRkernel)
         # third condition - first time restart after clearing workdir (init_mmenv wont init renv since micromamba env already exists)
@@ -51,7 +51,7 @@ init_mmenv() {
 
         echo "workdirr: $workdir"
       # micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
-      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); renv::install(c('IRkernel', 'yaml'));"
+      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('IRkernel', 'yaml'));"
 
 
 
