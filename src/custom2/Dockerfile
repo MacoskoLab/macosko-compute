@@ -22,7 +22,7 @@ RUN chmod +x /usr/local/bin/init_mmenv.sh
 
 # Create jstart script that sources init script and drops to bash shell
 RUN echo '#!/bin/bash --login' > /usr/local/bin/jstart && \
-    echo 'echo "DEBUG jstart: WORKDIR_PATH=$WORKDIR_PATH, arg1=$1, arg2=${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
+    echo 'echo "jstart: WORKDIR_PATH=$WORKDIR_PATH, arg1=$1, arg2=${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
     echo 'source /usr/local/bin/init_mmenv.sh' >> /usr/local/bin/jstart && \
     echo 'init_mmenv "${1:-${ENVNAME:-jupyterlab}}" "${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
     chmod +x /usr/local/bin/jstart

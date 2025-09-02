@@ -72,12 +72,13 @@ remount(){
 #   -v, --volumes VOLS  Specify volume mappings
 #   -s, --setupmode     Enable setup mode (no value needed)
 #   -e, --mmenv ENV     Specify micromamba environment (default: jupyterlab)
+#   -w, --workdir DIR   Specify workdir relative to MOUNTDIR (default: workdir)
 # Returns:
-#   String with parameters in format "memory&volumes&image&setupmode&mmenv"
+#   String with parameters in format "memory&volumes&image&setupmode&mmenv&workdir"
 getparams(){
 
 	 # options handling start
-	 local options=$(getopt -o "i:m:v:se:" --long "image:,memory:,volumes:,setupmode,mmenv:" -- "$@")
+	 local options=$(getopt -o "i:m:v:se:w:" --long "image:,memory:,volumes:,setupmode,mmenv:,workdir:" -- "$@")
 	if [ $? -ne 0 ]; then
 		echo "Error parsing options." >&2
 		return 1
@@ -90,6 +91,7 @@ getparams(){
   local image=""
   local setupmode=false
   local mmenv=jupyterlab
+  local workdir=workdir
 
 	while true; do
 		case "$1" in
@@ -117,6 +119,14 @@ getparams(){
 				mmenv="$2"
 				shift 2
 				;;
+			-w|--workdir)
+				if [ -z "$2" ] || [[ "$2" == -* ]]; then
+					echo "Error: -w/--workdir flag requires a value" >&2
+					return 1
+				fi
+				workdir="$2"
+				shift 2
+				;;
 			--)
 				shift
 				break
@@ -129,15 +139,20 @@ getparams(){
 	done
 
   # important
-	echo "$memory&$volumes&$image&$setupmode&$mmenv" 
+	echo "$memory&$volumes&$image&$setupmode&$mmenv&$workdir" 
 
 }
 
 # Mount personal directory if needed and create basic subdirectories
-# Usage: domount
+# Usage: domount [workdir]
+# Arguments:
+#   workdir - Optional workdir name relative to MOUNTDIR (default: workdir)
 # Returns:
 #   0 if successful, 1 if error
 domount(){
+
+  local workdir_name=${1:-workdir}
+  local custom_workdir_path="$MOUNTDIR/$workdir_name"
 
   df -h | grep "$MOUNTDIR"
   # check if personal drive is mounted at MOUNTDIR
@@ -156,8 +171,14 @@ domount(){
     fi
   fi
 
+  # Update WORKDIR_PATH if custom workdir is specified
+  if [ "$workdir_name" != "workdir" ]; then
+    WORKDIR_PATH="$custom_workdir_path"
+  fi
+
   mkdir -p $RSTUDIO_PATH $RENV_CACHE_PATH $JUPYTER_PATH $WORKDIR_PATH
   mkdir -p $JUPYTER_PATH/micromamba $JUPYTER_PATH/.jupyter
+  mkdir -p $WORKDIR_PATH # need to create for first time custom workdir
 
   # if $WORKDIR_PATH/.renvignore doesnt exist copy it there from ../templates/renvignore
   if [ ! -f "$WORKDIR_PATH/.renvignore" ]; then
@@ -260,13 +281,14 @@ gethostport(){
 }
 
 # Start container with specified image, memory, and volumes
-# Usage: startcontainer <image_name> <memory> <volumes> <setupmode> <mmenv>
+# Usage: startcontainer <image_name> <memory> <volumes> <setupmode> <mmenv> <workdir>
 # Arguments:
 #   image_name - Name of the container image
 #   memory - Memory limit for the container
 #   volumes - Volume mappings for the container
 #   setupmode - Setup mode flag
 #   mmenv - Micromamba environment name
+#   workdir - Working directory name relative to MOUNTDIR
 # Returns:
 #   0 if successful, 1 if error
 startcontainer(){
@@ -277,6 +299,7 @@ startcontainer(){
   local VOLS=$3
   local SETUPMODE=$4
   local MMENV=$5
+  local WORKDIR_NAME=$6
 
   # replace + by space in VOLS
   VOLS=${VOLS//+/ }
@@ -284,8 +307,11 @@ startcontainer(){
   echo 'vols' $VOLS
 
 	local CONTAINER_NAME=$IMAGE_NAME
+  
+  # Calculate the container workdir path
+  local CONTAINER_WORKDIR_PATH="/${WORKDIR_NAME:-workdir}"
 
-  echo "startcontainer: name:${IMAGE_NAME} memory:$MEMORY"
+  echo "startcontainer: name:${IMAGE_NAME} memory:$MEMORY workdir:$CONTAINER_WORKDIR_PATH"
 
 	podman container exists $CONTAINER_NAME
   if [ $? -eq 0 ]; then
@@ -299,13 +325,13 @@ startcontainer(){
     if [ "$SETUPMODE" = "false" ]; then
       # check if image name contains "custom"
       if [[ $IMAGE_NAME == *"custom"* ]]; then
-        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME "jstart $MMENV"
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME "jstart $MMENV"
       else
-        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
       fi
     else
       # if SETUPMODE flag ('-s') is true then run following
-      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
+      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
     fi
 
     podman ps | grep $CONTAINER_NAME
@@ -447,6 +473,7 @@ showinfo(){
 #   -i, --image NAME    Specify container image name
 #   -m, --memory SIZE   Specify memory limit (default: 160g)
 #   -v, --volumes VOLS  Specify volume mappings
+#   -w, --workdir DIR   Specify workdir relative to MOUNTDIR (default: workdir)
 # Returns:
 #   0 if successful, 1 if error
 start(){
@@ -456,9 +483,9 @@ start(){
     return 1
   fi
 
-  IFS="&" read -r memory volumes image setupmode mmenv <<< "$params"
+  IFS="&" read -r memory volumes image setupmode mmenv workdir <<< "$params"
 
-  echo startparams: $memory $volumes $image $setupmode $mmenv
+  echo startparams: $memory $volumes $image $setupmode $mmenv $workdir
 
   sync-con-stat-file
 
@@ -469,10 +496,10 @@ start(){
   fi
 
   # mount personal disk
-  domount
+  domount $workdir
 
   # start container and write state if container created
-  startcontainer $image $memory $volumes $setupmode $mmenv
+  startcontainer $image $memory $volumes $setupmode $mmenv $workdir
   # error check
   if [ $? -ne 0 ]; then
     echo "error while starting container $image"
@@ -492,6 +519,7 @@ start(){
 #   -i, --image NAME    Specify image type (basic or std, default: std)
 #   -m, --memory SIZE   Specify memory limit (default: 160g)
 #   -v, --volumes VOLS  Additional volume mappings
+#   -w, --workdir DIR   Specify workdir relative to MOUNTDIR (default: workdir)
 # Returns:
 #   0 if successful, 1 if error
 rstudio(){
@@ -500,7 +528,7 @@ rstudio(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -513,6 +541,7 @@ rstudio(){
     echo "invalid parameter: -e flag not supported for rstudio"
     return 1
   fi
+
 
   # check if $image has been set
   if [ -z "$image" ]; then
@@ -567,6 +596,7 @@ rstudio(){
 #   -i, --image NAME    Specify image type (basic or std, default: std)
 #   -m, --memory SIZE   Specify memory limit (default: 160g)
 #   -v, --volumes VOLS  Additional volume mappings
+#   -w, --workdir DIR   Specify workdir relative to MOUNTDIR (default: workdir)
 # Returns:
 #   0 if successful, 1 if error
 jupyter(){
@@ -575,7 +605,7 @@ jupyter(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -588,6 +618,7 @@ jupyter(){
     echo "invalid parameter: -e flag not supported for jupyter"
     return 1
   fi
+
 
   # check if $image has been set
   if [ -z "$image" ]; then
@@ -644,7 +675,7 @@ custom(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -671,7 +702,8 @@ custom(){
   case $image in
     std)
       BASE_IMAGE=custom-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      local CONTAINER_WORKDIR="/${workdir:-workdir}"
+      VOLS="-v+$WORKDIR_PATH:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
       ;;
     *)
       echo "invalid image name"
@@ -705,7 +737,7 @@ custom2(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv <<< "$params"
+  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -732,7 +764,8 @@ custom2(){
   case $image in
     std)
       BASE_IMAGE=custom2-std;
-      VOLS="-v+$WORKDIR_PATH:/workdir:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      local CONTAINER_WORKDIR="/${workdir:-workdir}"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
       ;;
     *)
       echo "invalid image name"

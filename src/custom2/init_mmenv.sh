@@ -16,8 +16,6 @@ common_setup(){
 
         # setup IRkernel if renv/activate.R or renv.lock exists, install and setup if not
         echo "workdir: $workdir"
-        # if workdir doesnt exist, create it
-        mkdir -p "$workdir"
         micromamba run -n "$envname" R -e "setwd('$workdir'); if (file.exists('renv/activate.R')) { renv::load(); IRkernel::installspec(user = FALSE) } else if (file.exists('renv.lock')) { renv::init(bare=TRUE); renv::restore(); renv::install(c('pbdZMQ', 'IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) } else { renv::init(); renv::install(c('pbdZMQ','IRkernel', 'yaml')); IRkernel::installspec(user = FALSE) }"
         # first condition - regular restart (only load, don't init renv)
         # second condition - first time start via renv.lock (init_mmenv wont init since micromamba env already exists); (renv.lock must include IRkernel)
@@ -29,8 +27,8 @@ common_setup(){
 init_mmenv() {
     local envname="${1:-jupyterlab}"
     local workdir="${2:-${WORKDIR_PATH:-/workdir}}"
-    echo "DEBUG: init_mmenv called with envname='$envname' workdir='$workdir'"
-    echo "DEBUG: WORKDIR_PATH environment variable = '$WORKDIR_PATH'"
+    echo "init_mmenv called with envname='$envname' workdir='$workdir'"
+    echo "WORKDIR_PATH environment variable = '$WORKDIR_PATH'"
     # Check if the environment exists
     if micromamba env list | grep -q "$envname"; then
         echo "$envname environment found. Activating and starting JupyterLab..."
