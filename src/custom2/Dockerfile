@@ -10,6 +10,7 @@ ARG ENVNAME=jupyterlab
 ENV USER=${USER}
 ENV ENVNAME=${ENVNAME}
 ENV JUPYTER_CONFIG_DIR=/jupyter/.jupyter
+ENV GIT_CONFIG_GLOBAL=/.git/.gitconfig
 
 RUN echo 'export JUPYTER_CONFIG_DIR="/jupyter/.jupyter"' >> /root/.bashrc
 
