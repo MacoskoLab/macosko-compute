@@ -530,7 +530,7 @@ rstudio(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -558,7 +558,7 @@ rstudio(){
   case $image in
     basic)
       BASE_IMAGE=rstudio-basic;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
       ;;
     std)
       BASE_IMAGE=rstudio-std;
@@ -577,6 +577,11 @@ rstudio(){
       return 1
       ;;
   esac
+
+  # Add read-only mount for dir_to_mount if specified
+  if [ -n "$dir_to_mount" ]; then
+    VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
+  fi
 
   
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
@@ -608,7 +613,7 @@ jupyter(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -641,21 +646,26 @@ jupyter(){
       ;;
     std)
       BASE_IMAGE=jupyter-std;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+"
       ;;
     ext1)
       BASE_IMAGE=jupyter-ext1;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+"
       ;;
     ext2)
       BASE_IMAGE=jupyter-ext2;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+"
       ;;
     *)
       echo "invalid image name"
       return 1
       ;;
   esac
+
+  # Add read-only mount for dir_to_mount if specified
+  if [ -n "$dir_to_mount" ]; then
+    VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
+  fi
 
   
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
@@ -679,7 +689,7 @@ custom(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -707,13 +717,18 @@ custom(){
     std)
       BASE_IMAGE=custom-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw"
       ;;
     *)
       echo "invalid image name"
       return 1
       ;;
   esac
+
+  # Add read-only mount for dir_to_mount if specified
+  if [ -n "$dir_to_mount" ]; then
+    VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
+  fi
 
   
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
@@ -770,16 +785,17 @@ custom2(){
       BASE_IMAGE=custom2-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
       VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
-      # Add read-only mount for dir_to_mount if specified
-      if [ -n "$dir_to_mount" ]; then
-        VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
-      fi
       ;;
     *)
       echo "invalid image name"
       return 1
       ;;
   esac
+
+  # Add read-only mount for dir_to_mount if specified
+  if [ -n "$dir_to_mount" ]; then
+    VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
+  fi
 
   
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
