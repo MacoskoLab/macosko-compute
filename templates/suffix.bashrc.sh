@@ -7,6 +7,7 @@ JUPYTER_PATH=$MOUNTDIR/jupyter
 WORKDIR_PATH=$MOUNTDIR/workdir
 MOUNTSFILE="$HOME/.config/misc/mounts"
 CON_STAT_FILE="$HOME/.config/misc/container"
+GIT_DIR="$HOME/.git"
 
 
 # Format a disk for use
@@ -179,6 +180,7 @@ domount(){
   mkdir -p $RSTUDIO_PATH $RENV_CACHE_PATH $JUPYTER_PATH $WORKDIR_PATH
   mkdir -p $JUPYTER_PATH/micromamba $JUPYTER_PATH/.jupyter
   mkdir -p $WORKDIR_PATH # need to create for first time custom workdir
+  mkdir -p $GIT_DIR
 
   # if $WORKDIR_PATH/.renvignore doesnt exist copy it there from ../templates/renvignore
   if [ ! -f "$WORKDIR_PATH/.renvignore" ]; then
@@ -767,7 +769,7 @@ custom2(){
     std)
       BASE_IMAGE=custom2-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw" 
       ;;
     *)
       echo "invalid image name"
