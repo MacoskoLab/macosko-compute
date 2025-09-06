@@ -741,7 +741,7 @@ custom2(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory volumes_discard image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -769,7 +769,11 @@ custom2(){
     std)
       BASE_IMAGE=custom2-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw" 
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
+      # Add read-only mount for dir_to_mount if specified
+      if [ -n "$dir_to_mount" ]; then
+        VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
+      fi
       ;;
     *)
       echo "invalid image name"
