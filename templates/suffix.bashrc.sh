@@ -558,19 +558,19 @@ rstudio(){
   case $image in
     basic)
       BASE_IMAGE=rstudio-basic;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     std)
       BASE_IMAGE=rstudio-std;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     ext1)
       BASE_IMAGE=rstudio-ext1;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     cus1)
       BASE_IMAGE=rstudio-cus1;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     *)
       echo "invalid image name"
