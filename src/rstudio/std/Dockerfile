@@ -18,7 +18,7 @@ RUN R -e "install.packages(c('tidyverse', \
                              'qs', 'viridis', \
                              'rstudioapi', \
                              'Seurat', 'SeuratObject', \
-                             'BiocManager', 'tidyr', \
+                             'BiocManager', 'renv', 'tidyr', \
                              repos='http://cloud.r-project.org'), \
                              Ncpus=8L)"
 
