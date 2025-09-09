@@ -43,7 +43,7 @@ These are base set of commands needed. For more functionality offered by tmux, p
 ## using custom jupyter lab
 
     ```
-    custom # to start custom jupyter lab 
+    custom2 # to start custom jupyter lab 
     ```
 
     ```
@@ -51,7 +51,7 @@ These are base set of commands needed. For more functionality offered by tmux, p
     ```
 - managing enviromemnts and installing R and Python packages in custom jupyter lab's environments
 
-    - use `custom -e <envname>` to start jupyter lab with a specified micromamba environment name for package isolation between projects
+    - use `custom2 -e <envname>` to start jupyter lab with a specified micromamba environment name for package isolation between projects
     - see [here](/docs/custom.md) for steps to install R and python packages within custom environments
 
 ## path to workdir on highmem1 machine
