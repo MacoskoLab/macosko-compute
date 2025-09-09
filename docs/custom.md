@@ -25,7 +25,7 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
     printed at the end of output. Use a browser to navigate to
     ```host_ip:port_number``` and a jupyter lab login page will appear. At jupyter
     login page, use password to be _your_ username.
-    Also, following additional arguments can be specified for the custom2 command:
+    Also, following additional arguments can be specified for the custome command:
 
     `-m|--memory` : This argument has default value 160g. Adjust based on maximum memory to reserve for container.
 
@@ -54,20 +54,72 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
     ```
 - to restart jupyter, just use ```custom2``` again with appropriate parameters or no parameters to use defaults.
 
-## 2. installing packages
+## 2. installing packages and saving manifest
 
-### 2.1 installing python packages
+### 2.1 installing micromamba (python and R) packages
 
 - start console in jupyter lab
 - enter ```bash```
 - install packages via ```micromamba``` into current enviromment
     - e.g ```micromamba install pseudorandom -c conda-forge``` to install package ```pseudorandom```
 - packages are installed into ```/mnt/disks/$USER/jupyter/micromamba``` in local filesystem and accessed at ```/jupyter/micromamba``` on the container filesystem
+- to save a manifest of installed micromamba packages
+    ```
+    micromamba env export --explicit > env.txt
+    ```
 
-### 2.2 installing R packages
+### 2.2 installing R packages (for packages not available via micromamba)
+
+#### installing R package into renv environment
 
 - start console in jupyter lab
 - start ```R``` in console
+- check if renv project is loaded
+    ```
+    renv::project() # shows current renv project or NULL if no project is loaded
+    ```
+- if current renv::project() is NULL, the load the renv project and verify that a project is loaded.
+    ```
+    renv::load() # load renv project
+    renv::project() # should now show path to loaded project
+    ```
+- install packages via renv
+    ```
+    renv::install('packagename')
+    ```
+    packages are installed into the global renv cache folder (/root/.cache/R/renv/) and linked via the renv folder in current project folder.
+- installing bioconductor packages
+    ```
+    renv::install('bioc::packagename')
+    ```
+
+- to save a snapshot/manifest of installed packages (ie to create the ```renv.lock``` file)
+    ```
+    renv::snapshot() 
+    ```
+    select option to snapshot only installed packages and not install missing packages before snapshot.
+
+
+## 3. creating a new environment using existing manifest files
+
+To fully recreate a custom environment, following two manifest files are needed:
+
+- ```env.txt``` # manifest of packages installed via micromamba
+- ```renv.lock``` #  manifest of packages installed via renv
+
+Steps to recreate custom environment:
+
+- identify or create a new project folder ```/mnt/disks/$USER/<projname>```
+- place both ```env.txt``` and ```renv.lock``` in project folder
+- ```custom2 -s -w /<projname>``` # to enter setup mode and access the proj folder
+- ```micromamba create --name <envname> --file <projname>/env.txt``` # to create micromamba env using env.txt
+- ```custom2 -e <envname> -w <projname>``` # to start using new environment
+- packages in ```renv.lock``` are automatically installed and linked when a project with renv.lock is loaded and the first start would be longer than the following start ups due to the initial installation of the packages if any.
+
+
+
+#### installing R package without renv (deprecated)
+
 - install R packages as usual via ```install.packages``` e.g. ```install.packages("qs")``` to install package ```qs```
 - packages are installed into ```/mnt/disks/$USER/workdir/R-packages``` in local filesystem and accessed at the working directory's ```R-packages``` subfolder on the container filesystem
 
