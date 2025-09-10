@@ -70,6 +70,16 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
     ```
     micromamba env export --explicit > env.txt
     ```
+- packages can also be installed in setup mode via following commands
+    ```
+    custom2 -s
+    micromamba env list # to see list of available envs
+    micromamba create -n <envname> r-matrix python=3.10 r-base=4.3 jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64 -c conda-forge -y  # if creating a new env; not necessary if installing packages into existing env
+    micromamba activate <envname> # to activate specific env if needed
+    micromamba install -c conda-forge -c bioconda <package-list> # to install packages in to current env
+    exit
+    ```
+
 
 ### 2.2 installing R packages (for packages not available via micromamba)
 
