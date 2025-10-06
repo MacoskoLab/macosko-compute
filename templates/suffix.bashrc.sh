@@ -74,12 +74,13 @@ remount(){
 #   -s, --setupmode     Enable setup mode (no value needed)
 #   -e, --mmenv ENV     Specify micromamba environment (default: jupyterlab)
 #   -w, --workdir DIR   Specify workdir relative to MOUNTDIR (default: workdir)
+#   -x, --suffix SUFFIX Specify suffix for container name (default: empty)
 # Returns:
-#   String with parameters in format "memory&volumes&image&setupmode&mmenv&workdir"
+#   String with parameters in format "memory&volumes&image&setupmode&mmenv&workdir&suffix"
 getparams(){
 
 	 # options handling start
-	 local options=$(getopt -o "i:m:v:se:w:" --long "image:,memory:,volumes:,setupmode,mmenv:,workdir:" -- "$@")
+	 local options=$(getopt -o "i:m:v:se:w:x:" --long "image:,memory:,volumes:,setupmode,mmenv:,workdir:,suffix:" -- "$@")
 	if [ $? -ne 0 ]; then
 		echo "Error parsing options." >&2
 		return 1
@@ -93,6 +94,7 @@ getparams(){
   local setupmode=false
   local mmenv=jupyterlab
   local workdir=workdir
+  local suffix=""
 
 	while true; do
 		case "$1" in
@@ -128,6 +130,14 @@ getparams(){
 				workdir="$2"
 				shift 2
 				;;
+			-x|--suffix)
+				if [ -z "$2" ] || [[ "$2" == -* ]]; then
+					echo "Error: -x/--suffix flag requires a value" >&2
+					return 1
+				fi
+				suffix="$2"
+				shift 2
+				;;
 			--)
 				shift
 				break
@@ -140,7 +150,7 @@ getparams(){
 	done
 
   # important
-	echo "$memory&$volumes&$image&$setupmode&$mmenv&$workdir" 
+	echo "$memory&$volumes&$image&$setupmode&$mmenv&$workdir&$suffix" 
 
 }
 
@@ -485,9 +495,9 @@ start(){
     return 1
   fi
 
-  IFS="&" read -r memory volumes image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory volumes image setupmode mmenv workdir suffix <<< "$params"
 
-  echo startparams: $memory $volumes $image $setupmode $mmenv $workdir
+  echo startparams: $memory $volumes $image $setupmode $mmenv $workdir $suffix
 
   sync-con-stat-file
 
@@ -530,7 +540,7 @@ rstudio(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir suffix <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -613,7 +623,7 @@ jupyter(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir suffix <<< "$params"
 
   # check if -s flag was used
   if [ "$setupmode" = "true" ]; then
@@ -689,7 +699,7 @@ custom(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir suffix <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -756,7 +766,7 @@ custom2(){
   if [ $? -ne 0 ]; then
     return 1
   fi
-  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir <<< "$params"
+  IFS="&" read -r memory dir_to_mount image setupmode mmenv workdir suffix <<< "$params"
 
   # check if -i flag was used
   if [ -n "$image" ]; then
@@ -765,9 +775,9 @@ custom2(){
   fi
 
   # echo setupmode and mmenv
-  echo "setupmode: $setupmode mmenv: $mmenv"
+  echo "setupmode: $setupmode mmenv: $mmenv suffix: $suffix"
 
-  
+
   # check if both -s and -e flags are used simultaneously
   if [ "$setupmode" = "true" ] && [ "$mmenv" != "jupyterlab" ]; then
     echo "invalid parameter: -s and -e flags cannot be used simultaneously"
@@ -797,9 +807,15 @@ custom2(){
     VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
   fi
 
-  
+
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
-  local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
+  # Apply suffix if provided
+  local USER_IMAGE
+  if [ -n "$suffix" ]; then
+    USER_IMAGE="${BASE_IMAGE}-$(id -un)-${suffix}"
+  else
+    USER_IMAGE="${BASE_IMAGE}-$(id -un)"
+  fi
   echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
   buildimage ${BASE_IMAGE} $USER_IMAGE "custom2"
   # check for error
