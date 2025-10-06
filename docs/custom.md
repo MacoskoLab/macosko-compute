@@ -37,10 +37,12 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
 
     `-v|--volumes` : This argument specifies a single directory path to mount read-only inside the container. The directory is mounted at the same path inside the container as on the host filesystem. This can be used to load data from another user's workdir into Rstudio/Jupyterlab without having to copy it to own workdir first.
 
+    `-x|--suffix` : This argument specifies a suffix to append to the container name. This allows you to run multiple custom2 containers simultaneously with different configurations. If no value is provided, no suffix is added.
+
     example usage with parameters:
 
     ```
-    custom2 -m 200g               # start jupyter server with 200GB memory 
+    custom2 -m 200g               # start jupyter server with 200GB memory
     custom2 -e myenv2             # start with custom micromamba environment 'myenv2'
     custom2 -s                    # start in setup mode (bash shell access)
     custom2 -e myenv2 -m 180g     # start with 'myenv2' environment and 180GB memory
@@ -48,6 +50,8 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
     custom2 -w data -m 200g       # use 'data' directory with 200GB memory
     custom2 -e myenv3 -w data     # use 'myenv3' environment with 'data' working directory
     custom2 -v /mnt/disks/<user>/workdir   # mount /mnt/disks/<user>/workdir read-only at same path in container
+    custom2 -x test               # start with suffix 'test' (container name: custom2-std-username-test)
+    custom2 -s -x longrun         # start in setup mode with suffix 'longrun' for running long-running jobs
     ```
 - any data to be saved on the personal disk (to persist when personal disk is transferred to another VM) should be placed within the working directory path in the container (default: `/workdir`, or the custom directory specified with `-w` option).
 
