@@ -191,6 +191,7 @@ domount(){
   mkdir -p $JUPYTER_PATH/micromamba $JUPYTER_PATH/.jupyter
   mkdir -p $WORKDIR_PATH # need to create for first time custom workdir
   mkdir -p $GIT_DIR
+  mkdir -p $HOME/.ssh
 
   # if $WORKDIR_PATH/.renvignore doesnt exist copy it there from ../templates/renvignore
   if [ ! -f "$WORKDIR_PATH/.renvignore" ]; then
