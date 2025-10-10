@@ -21,6 +21,13 @@ common_setup(){
         # second condition - first time start via renv.lock (init_mmenv wont init since micromamba env already exists); (renv.lock must include IRkernel)
         # third condition - first time restart after clearing workdir (init_mmenv wont init renv since micromamba env already exists)
 
+        # Print IP and port information
+        local host_ip="${HOST_IP:-$(hostname -I | awk '{print $1}')}"
+        local host_port="${HOST_PORT:-8787}"
+        echo "================================"
+        echo "JupyterLab will be available at:"
+        echo "http://${host_ip}:${host_port}"
+        echo "================================"
 
 }
 

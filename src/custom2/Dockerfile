@@ -23,7 +23,17 @@ RUN chmod +x /usr/local/bin/init_mmenv.sh
 
 # Create jstart script that sources init script and drops to bash shell
 RUN echo '#!/bin/bash --login' > /usr/local/bin/jstart && \
-    echo 'echo "jstart: WORKDIR_PATH=$WORKDIR_PATH, arg1=$1, arg2=${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
+    echo '# Save env vars to file on first run if not already saved' >> /usr/local/bin/jstart && \
+    echo 'if [ ! -f /tmp/.container_env ]; then' >> /usr/local/bin/jstart && \
+    echo '  if [ -n "$HOST_IP" ] || [ -n "$HOST_PORT" ]; then' >> /usr/local/bin/jstart && \
+    echo '    echo "export HOST_IP=\"$HOST_IP\"" > /tmp/.container_env' >> /usr/local/bin/jstart && \
+    echo '    echo "export HOST_PORT=\"$HOST_PORT\"" >> /tmp/.container_env' >> /usr/local/bin/jstart && \
+    echo '  fi' >> /usr/local/bin/jstart && \
+    echo 'fi' >> /usr/local/bin/jstart && \
+    echo '# Load env vars from file if it exists' >> /usr/local/bin/jstart && \
+    echo 'if [ -f /tmp/.container_env ]; then' >> /usr/local/bin/jstart && \
+    echo '  source /tmp/.container_env' >> /usr/local/bin/jstart && \
+    echo 'fi' >> /usr/local/bin/jstart && \
     echo 'source /usr/local/bin/init_mmenv.sh' >> /usr/local/bin/jstart && \
     echo 'init_mmenv "${1:-${ENVNAME:-jupyterlab}}" "${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
     chmod +x /usr/local/bin/jstart

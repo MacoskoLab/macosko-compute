@@ -334,17 +334,17 @@ startcontainer(){
     hostport=$(gethostport)
     IFS=":" read -r HOST_IP PORT_NUM <<< $hostport
 
-    # if SETUPMODE flag ('-s') is false then run following 
+    # if SETUPMODE flag ('-s') is false then run following
     if [ "$SETUPMODE" = "false" ]; then
       # check if image name contains "custom"
       if [[ $IMAGE_NAME == *"custom"* ]]; then
-        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME "jstart $MMENV"
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -e HOST_IP=$HOST_IP -e HOST_PORT=$PORT_NUM -p $PORT_NUM:8787 $VOLS $IMAGE_NAME "jstart $MMENV"
       else
-        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 
+        podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -tid --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -e HOST_IP=$HOST_IP -e HOST_PORT=$PORT_NUM -p $PORT_NUM:8787 $VOLS $IMAGE_NAME
       fi
     else
       # if SETUPMODE flag ('-s') is true then run following
-      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
+      podman run --cpus=8 --memory=$MEMORY --name $CONTAINER_NAME -ti --rm -e PASSWORD=$(id -un) -e WORKDIR_PATH=$CONTAINER_WORKDIR_PATH -e HOST_IP=$HOST_IP -e HOST_PORT=$PORT_NUM -p $PORT_NUM:8787 $VOLS $IMAGE_NAME 'bash --login'
     fi
 
     podman ps | grep $CONTAINER_NAME
