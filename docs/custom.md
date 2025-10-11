@@ -31,7 +31,7 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
 
     `-e|--mmenv` : This argument specifies the micromamba environment name to use or create. Default value is `jupyterlab`. When a custom environment name is provided, the container will create or activate that specific micromamba environment for package isolation.
 
-    `-s|--setupmode` : This flag starts the container in setup mode, providing direct bash shell access instead of launching Jupyter Lab. Useful for installing packages, debugging, or performing administrative tasks. Cannot be used simultaneously with `-e` flag.
+    `-s|--setupmode` : This flag starts the container in setup mode, providing direct bash shell access instead of launching Jupyter Lab. Useful for installing packages, debugging, or performing administrative tasks. Cannot be used simultaneously with `-e` flag. To start JupyterLab from setup mode, use the `jstart` command (see section 2.3 below).
 
     `-w|--workdir` : This argument specifies the working directory name relative to your personal disk mount. Default value is `workdir`. This allows you to customize which directory is mounted as the working directory inside the container.
 
@@ -112,9 +112,49 @@ Custom2 jupyter lab image requires the user to manage their own packages. Packag
 
 - to save a snapshot/manifest of installed packages (ie to create the ```renv.lock``` file)
     ```
-    renv::snapshot() 
+    renv::snapshot()
     ```
     select option to snapshot only installed packages and not install missing packages before snapshot.
+
+### 2.3 starting JupyterLab from setup mode with jstart
+
+When running `custom2 -s` (setup mode), the container starts with a bash shell instead of automatically launching JupyterLab. You can manually start JupyterLab using the `jstart` command.
+
+Basic usage:
+```
+jstart                        # Start with default environment (jupyterlab), Python 3.10, R 4.3
+jstart myenv                  # Start with custom environment name
+jstart myenv 3.11 4.4         # Start with custom environment, Python 3.11, and R 4.4
+```
+
+**Important notes:**
+- Python and R versions must be specified together - you cannot specify only one
+- Python and R versions are only used when **creating a new environment** for the first time
+- If the environment already exists, version arguments are ignored and the existing environment is used
+- To use different Python/R versions, either delete the existing environment first or use a different environment name
+
+Examples:
+```bash
+# Start container in setup mode with suffix 'longrun'
+custom2 -s -x longrun
+
+# Inside the container - start with default versions
+jstart
+
+# OR start with custom Python 3.11 and R 4.4 (creates new 'jupyterlab' environment)
+jstart jupyterlab 3.11 4.4
+
+# OR start with custom environment name and versions
+jstart myproject 3.11 4.2
+```
+
+**Error examples:**
+```bash
+jstart myenv 3.11              # ERROR: Both Python and R versions must be specified
+jstart myenv "" 4.4            # ERROR: Both Python and R versions must be specified
+```
+
+Once `jstart` completes, JupyterLab will be running and the connection information (IP address and port) will be displayed.
 
 
 ## 3. creating a new environment using existing manifest files
