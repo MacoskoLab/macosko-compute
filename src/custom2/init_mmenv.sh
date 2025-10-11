@@ -32,9 +32,26 @@ common_setup(){
 }
 
 init_mmenv() {
+    # Validate that both Python and R versions are specified together, or neither
+    if [ -n "$3" ] && [ -z "$4" ]; then
+        echo "Error: Both Python and R versions must be specified together."
+        echo "Usage: jstart [envname] [python_version] [r_version]"
+        echo "Example: jstart jupyterlab 3.11 4.4"
+        return 1
+    fi
+
+    if [ -z "$3" ] && [ -n "$4" ]; then
+        echo "Error: Both Python and R versions must be specified together."
+        echo "Usage: jstart [envname] [python_version] [r_version]"
+        echo "Example: jstart jupyterlab 3.11 4.4"
+        return 1
+    fi
+
     local envname="${1:-jupyterlab}"
     local workdir="${2:-${WORKDIR_PATH:-/workdir}}"
-    echo "init_mmenv called with envname='$envname' workdir='$workdir'"
+    local pyversion="${3:-3.10}"
+    local rversion="${4:-4.3}"
+    echo "init_mmenv called with envname='$envname' workdir='$workdir' pyversion='$pyversion' rversion='$rversion'"
     echo "WORKDIR_PATH environment variable = '$WORKDIR_PATH'"
     # Check if the environment exists
     if micromamba env list | grep -q "$envname"; then
@@ -50,7 +67,7 @@ init_mmenv() {
         # Create the environment
 
        # micromamba create -n "$envname" -y python=3.11.2 jupyterlab pandas -c conda-forge
-       micromamba create -n "$envname" r-matrix python=3.10 r-base=4.3 jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64 -c conda-forge -y
+       micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64 -c conda-forge -y
 
 
        # Activate the new environment

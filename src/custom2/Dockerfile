@@ -35,7 +35,7 @@ RUN echo '#!/bin/bash --login' > /usr/local/bin/jstart && \
     echo '  source /tmp/.container_env' >> /usr/local/bin/jstart && \
     echo 'fi' >> /usr/local/bin/jstart && \
     echo 'source /usr/local/bin/init_mmenv.sh' >> /usr/local/bin/jstart && \
-    echo 'init_mmenv "${1:-${ENVNAME:-jupyterlab}}" "${WORKDIR_PATH:-/workdir}"' >> /usr/local/bin/jstart && \
+    echo 'init_mmenv "${1:-${ENVNAME:-jupyterlab}}" "${WORKDIR_PATH:-/workdir}" "$2" "$3"' >> /usr/local/bin/jstart && \
     chmod +x /usr/local/bin/jstart
     # echo 'exec /bin/bash --login' >> /usr/local/bin/jstart && \
 
