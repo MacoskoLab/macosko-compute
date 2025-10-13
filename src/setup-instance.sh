@@ -12,7 +12,7 @@ sudo apt-get -y install podman
 sudo apt -y install dbus-x11
 
 sudo apt-get -y install passt
-sudo apt-get -y install fdisk htop expect tmux dstat
+sudo apt-get -y install fdisk htop expect tmux dstat ripgrep fd-find
 
 mkdir -p ~/.config/containers
 cp -f ./templates/storage.conf ~/.config/containers/storage.conf

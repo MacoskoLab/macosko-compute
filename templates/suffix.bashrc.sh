@@ -1210,4 +1210,4 @@ NEW_UID=$2
 }
 
 export EDITOR=vi
-
+alias fd='fdfind'
