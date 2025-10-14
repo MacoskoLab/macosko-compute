@@ -99,8 +99,19 @@ init_mmenv() {
         echo "$envname environment not found. Creating and starting JupyterLab..."
         # Create the environment
 
-       # micromamba create -n "$envname" -y python=3.11.2 jupyterlab pandas -c conda-forge
-       micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64 gxx_linux-64 gfortran_linux-64 sysroot_linux-64 -c conda-forge -y
+        # Check if R version is below 4.0 to determine compiler version requirements
+        # R < 4.0 uses default compiler versions, R >= 4.0 needs gcc/gxx 13
+        if (( $(echo "$rversion < 4.0" | bc -l) )); then
+           # Create environment with default compiler versions for R < 4.0
+           echo "R version is below 4.0"
+           micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64 gxx_linux-64 gfortran_linux-64 sysroot_linux-64 -c conda-forge -y
+         else
+            echo "R version is 4.0 or above"
+
+            # Create environment with gcc/gxx version 13 for R >= 4.0 (required for compatibility)
+            micromamba create -n "$envname" r-matrix python=$pyversion r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=12 gxx_linux-64=12 sysroot_linux-64 -c conda-forge -y
+
+        fi
 
 
        # Activate the new environment
