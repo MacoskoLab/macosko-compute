@@ -97,7 +97,7 @@ init_mmenv() {
         # Create the environment
 
        # micromamba create -n "$envname" -y python=3.11.2 jupyterlab pandas -c conda-forge
-       micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64 -c conda-forge -y
+       micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64 gxx_linux-64 gfortran_linux-64 sysroot_linux-64 -c conda-forge -y
 
 
        # Activate the new environment
