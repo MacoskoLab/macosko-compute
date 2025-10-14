@@ -26,6 +26,9 @@ common_setup(){
 
             if (file.exists('renv/activate.R')) {
                 # Regular restart: load existing renv environment
+                
+                # append micromamba envs path here directly without requiring .Rprofile
+                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
                 renv::load()
                 cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
