@@ -103,7 +103,7 @@ init_mmenv() {
 
         # Check if R version is below 4.0 to determine compiler version requirements
         # R < 4.0 uses default compiler versions, R >= 4.0 needs gcc/gxx 13
-        if (( $(echo "$rversion < 4.0" | bc -l) )); then
+        if awk "BEGIN {exit !($rversion < 4.0)}"; then
            # Create environment with default compiler versions for R < 4.0
            echo "R version is below 4.0"
            micromamba create -n "$envname" r-matrix python="$pyversion" r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64 gxx_linux-64 gfortran_linux-64 sysroot_linux-64 -c conda-forge -y
