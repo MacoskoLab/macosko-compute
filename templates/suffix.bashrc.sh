@@ -2,7 +2,7 @@
 # Global variables for common paths
 MOUNTDIR=/mnt/disks/$(id -un)
 RSTUDIO_PATH=$MOUNTDIR/rstudio
-RENV_CACHE_PATH=$MOUNTDIR/renvcache
+RENV_CACHE_PATH=$MOUNTDIR/renvcacheV2/s # s for suffix; to allow for each container to mount own renvcache for it to persist
 JUPYTER_PATH=$MOUNTDIR/jupyter
 WORKDIR_PATH=$MOUNTDIR/workdir
 MOUNTSFILE="$HOME/.config/misc/mounts"
@@ -562,6 +562,13 @@ rstudio(){
     image=std
   fi
 
+  # Set up renv cache path, adding suffix folder if provided
+  local renv_cache_path="$RENV_CACHE_PATH"
+  if [ -n "$suffix" ]; then
+    renv_cache_path="$RENV_CACHE_PATH/s$suffix"
+    echo "using renv cache path with suffix: $renv_cache_path"
+  fi
+
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
   local VOLS=""
@@ -569,7 +576,7 @@ rstudio(){
   case $image in
     basic)
       BASE_IMAGE=rstudio-basic;
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+usr_volume:/usr+-v+$renv_cache_path:/root/.cache:rw+-v+$RSTUDIO_PATH:/rstudio:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     std)
       BASE_IMAGE=rstudio-std;
@@ -594,7 +601,7 @@ rstudio(){
     VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
   fi
 
-  
+
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
   local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
   echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
@@ -607,6 +614,12 @@ rstudio(){
 
   # pass all args to start and additionally pass image
   start "$@ -i $USER_IMAGE -v ${VOLS}"
+
+  # Create the renv cache directory after container start (with suffix subfolder if provided)
+  if [ $? -eq 0 ] && [ -n "$suffix" ]; then
+    mkdir -p "$renv_cache_path"
+    echo "created renv cache directory: $renv_cache_path"
+  fi
 }
 
 # Start a Jupyter container
@@ -721,6 +734,13 @@ custom(){
   # set default image to std
   image=std
 
+  # Set up renv cache path, adding suffix folder if provided
+  local renv_cache_path="$RENV_CACHE_PATH"
+  if [ -n "$suffix" ]; then
+    renv_cache_path="$RENV_CACHE_PATH/s$suffix"
+    echo "using renv cache path with suffix: $renv_cache_path"
+  fi
+
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
   local VOLS=""
@@ -728,7 +748,7 @@ custom(){
     std)
       BASE_IMAGE=custom-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$renv_cache_path:/root/.cache:rw"
       ;;
     *)
       echo "invalid image name"
@@ -741,7 +761,7 @@ custom(){
     VOLS="$VOLS+-v+$dir_to_mount:$dir_to_mount:ro"
   fi
 
-  
+
   # build user image to be run ie ${BASE_IMAGE}_$(id -un)
   local USER_IMAGE="${BASE_IMAGE}-$(id -un)"
   echo "base_image:${BASE_IMAGE} user_image:${USER_IMAGE}"
@@ -757,6 +777,12 @@ custom(){
     start "$@ -i $USER_IMAGE -v ${VOLS} -s"
   else
     start "$@ -i $USER_IMAGE -v ${VOLS} -e ${mmenv}"
+  fi
+
+  # Create the renv cache directory after container start (with suffix subfolder if provided)
+  if [ $? -eq 0 ] && [ -n "$suffix" ]; then
+    mkdir -p "$renv_cache_path"
+    echo "created renv cache directory: $renv_cache_path"
   fi
 
 }
@@ -788,6 +814,13 @@ custom2(){
   # set default image to std
   image=std
 
+  # Set up renv cache path, adding suffix folder if provided
+  local renv_cache_path="$RENV_CACHE_PATH"
+  if [ -n "$suffix" ]; then
+    renv_cache_path="$RENV_CACHE_PATH$suffix"
+    echo "using renv cache path with suffix: $renv_cache_path"
+  fi
+
   # identify BASE_IMAGE_PATH
   local BASE_IMAGE=""
   local VOLS=""
@@ -795,7 +828,7 @@ custom2(){
     std)
       BASE_IMAGE=custom2-std;
       local CONTAINER_WORKDIR="/${workdir:-workdir}"
-      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$RENV_CACHE_PATH:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
+      VOLS="-v+$MOUNTDIR$CONTAINER_WORKDIR:$CONTAINER_WORKDIR:rw+-v+$JUPYTER_PATH/micromamba:/jupyter/micromamba:rw+-v+$renv_cache_path:/root/.cache:rw+-v+$HOME/.ssh:/root/.ssh:rw+-v+$GIT_DIR:/.git:rw"
       ;;
     *)
       echo "invalid image name"
@@ -824,6 +857,10 @@ custom2(){
     echo "error while building image $USER_IMAGE"
     return 1
   fi
+
+  # Create the renv cache directory BEFORE container start so podman can mount it
+  mkdir -p "$renv_cache_path"
+  echo "created renv cache directory: $renv_cache_path"
 
   # pass all args to start and additionally pass image
   if [ "$setupmode" = "true" ]; then
