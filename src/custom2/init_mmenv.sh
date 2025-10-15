@@ -36,6 +36,7 @@ common_setup(){
             } else if (file.exists('renv.lock')) {
                 # First time start via renv.lock: init and restore
                 renv::init(bare=TRUE)
+                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
                 cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
                 renv::restore()
@@ -44,6 +45,7 @@ common_setup(){
             } else {
                 # Fresh start: create new renv environment
                 renv::init()
+                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
                 cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
                 renv::install(c('pbdZMQ', 'IRkernel', 'yaml'))
@@ -119,7 +121,7 @@ init_mmenv() {
 
         echo "workdirr: $workdir"
       # micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
-      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('IRkernel', 'yaml'));"
+      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths())); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('IRkernel', 'yaml'));"
 
 
 
