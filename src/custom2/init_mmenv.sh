@@ -26,18 +26,18 @@ common_setup(){
 
             if (file.exists('renv/activate.R')) {
                 # Regular restart: load existing renv environment
-                
+
                 # append micromamba envs path here directly without requiring .Rprofile
-                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
                 renv::load()
-                cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
+                .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))
+                cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
                 IRkernel::installspec(user = FALSE)
             } else if (file.exists('renv.lock')) {
                 # First time start via renv.lock: init and restore
                 renv::init(bare=TRUE)
-                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
-                cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
+                .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))
+                cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
                 renv::restore()
                 renv::install(c('pbdZMQ', 'IRkernel', 'yaml'))
@@ -45,8 +45,8 @@ common_setup(){
             } else {
                 # Fresh start: create new renv environment
                 renv::init()
-                .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))
-                cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))',
+                .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))
+                cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))',
                     file = '.Rprofile', append = TRUE, sep = '\n')
                 renv::install(c('pbdZMQ', 'IRkernel', 'yaml'))
                 IRkernel::installspec(user = FALSE)
@@ -111,7 +111,7 @@ init_mmenv() {
             echo "R version is 4.0 or above"
 
             # Create environment with gcc/gxx version 13 for R >= 4.0 (required for compatibility)
-            micromamba create -n "$envname" r-matrix python=$pyversion r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=12 gxx_linux-64=12 sysroot_linux-64 -c conda-forge -y
+            micromamba create -n "$envname" r-matrix python=$pyversion r-base="$rversion" jupyterlab libxml2 xz zlib r-pbdzmq r-renv r-yaml zeromq pkg-config gcc_linux-64=13 gxx_linux-64=13 sysroot_linux-64 -c conda-forge -y
 
         fi
 
@@ -121,7 +121,7 @@ init_mmenv() {
 
         echo "workdirr: $workdir"
       # micromamba run -n "$envname" R -e 'renv::init(bare=TRUE); renv::install("IRkernel", prompt = FALSE); IRkernel::installspec(user = FALSE)'
-      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); .libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths())); cat('.libPaths(c(\"/jupyter/micromamba/envs/$envname/lib/R/library\", .libPaths()))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('IRkernel', 'yaml'));"
+      micromamba run -n "$envname" R -e "setwd('$workdir'); renv::init(bare=TRUE); .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\")); cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))', file = '.Rprofile', append = TRUE, sep = '\n'); renv::install(c('IRkernel', 'yaml'));"
 
 
 
