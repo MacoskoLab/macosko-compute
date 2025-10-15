@@ -2,7 +2,7 @@
 # Global variables for common paths
 MOUNTDIR=/mnt/disks/$(id -un)
 RSTUDIO_PATH=$MOUNTDIR/rstudio
-RENV_CACHE_PATH=$MOUNTDIR/renvcacheV2/s # s for suffix; to allow for each container to mount own renvcache for it to persist
+RENV_CACHE_PATH=$MOUNTDIR/renvcache
 JUPYTER_PATH=$MOUNTDIR/jupyter
 WORKDIR_PATH=$MOUNTDIR/workdir
 MOUNTSFILE="$HOME/.config/misc/mounts"
@@ -565,7 +565,7 @@ rstudio(){
   # Set up renv cache path, adding suffix folder if provided
   local renv_cache_path="$RENV_CACHE_PATH"
   if [ -n "$suffix" ]; then
-    renv_cache_path="$RENV_CACHE_PATH/s$suffix"
+    renv_cache_path="$MOUNTDIR/renvcacheV2/$suffix"
     echo "using renv cache path with suffix: $renv_cache_path"
   fi
 
@@ -737,7 +737,7 @@ custom(){
   # Set up renv cache path, adding suffix folder if provided
   local renv_cache_path="$RENV_CACHE_PATH"
   if [ -n "$suffix" ]; then
-    renv_cache_path="$RENV_CACHE_PATH/s$suffix"
+    renv_cache_path="$MOUNTDIR/renvcacheV2/$suffix"
     echo "using renv cache path with suffix: $renv_cache_path"
   fi
 
@@ -817,7 +817,7 @@ custom2(){
   # Set up renv cache path, adding suffix folder if provided
   local renv_cache_path="$RENV_CACHE_PATH"
   if [ -n "$suffix" ]; then
-    renv_cache_path="$RENV_CACHE_PATH$suffix"
+    renv_cache_path="$MOUNTDIR/renvcacheV2/$suffix"
     echo "using renv cache path with suffix: $renv_cache_path"
   fi
 
