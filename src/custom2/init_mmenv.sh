@@ -20,9 +20,9 @@ common_setup(){
             setwd('$workdir')
 
             # Clear .Rprofile to avoid duplicate entries
-            if (file.exists('.Rprofile')) {
-                file.remove('.Rprofile')
-            }
+            # if (file.exists('.Rprofile')) {
+            #     file.remove('.Rprofile')
+            # }
 
             if (file.exists('renv/activate.R')) {
                 # Regular restart: load existing renv environment
