@@ -26,6 +26,7 @@ common_setup(){
 
             if (file.exists('renv/activate.R')) {
                 # Regular restart: load existing renv environment
+                cat('\\n=== CONDITION 1: Regular restart - renv/activate.R exists ===\\n')
 
                 # append micromamba envs path here directly without requiring .Rprofile
                 renv::load()
@@ -35,6 +36,7 @@ common_setup(){
                 IRkernel::installspec(user = FALSE)
             } else if (file.exists('renv.lock')) {
                 # First time start via renv.lock: init and restore
+                cat('\\n=== CONDITION 2: First time start - renv.lock exists ===\\n')
                 renv::init(bare=TRUE)
                 .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))
                 cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))',
@@ -44,6 +46,7 @@ common_setup(){
                 IRkernel::installspec(user = FALSE)
             } else {
                 # Fresh start: create new renv environment
+                cat('\\n=== CONDITION 3: Fresh start - no renv files found ===\\n')
                 renv::init()
                 .libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))
                 cat('.libPaths(c(.libPaths(), \"/jupyter/micromamba/envs/$envname/lib/R/library\"))',
