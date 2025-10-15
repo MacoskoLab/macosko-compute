@@ -20,9 +20,18 @@ common_setup(){
             setwd('$workdir')
 
             # Clear .Rprofile to avoid duplicate entries
-            # if (file.exists('.Rprofile')) {
-            #     file.remove('.Rprofile')
-            # }
+            # instead of removing  .Rprofile; only remove lines that are not source("renv/activate.R")
+            # delete from second line onward
+            # removing duplicates of .libPaths appends help when different envs are being started
+            if (file.exists('.Rprofile')) {
+                lines <- readLines('.Rprofile')
+                if (length(lines) > 1) {
+                    writeLines(lines[1], '.Rprofile')
+                }
+            }
+            
+            
+
 
             if (file.exists('renv/activate.R')) {
                 # Regular restart: load existing renv environment
